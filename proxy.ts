@@ -81,22 +81,6 @@ function handleTenant(request: NextRequest) {
   return handleClient(request);
 }
 
-function handleAdmin(request: NextRequest) {
-  const url = request.nextUrl;
-  const path = url.pathname;
-  const hasSession = !!request.cookies.get(COOKIE_NAMES.tenant)?.value;
-
-  if (inList(path, PUBLIC_ADMIN)) {
-    return NextResponse.next();
-  }
-  if (!hasSession) {
-    const u = url.clone();
-    u.pathname = "/admin/auth/login";
-    return NextResponse.redirect(u);
-  }
-  return NextResponse.next();
-}
-
 function handleClient(request: NextRequest) {
   const url = request.nextUrl;
   const path = url.pathname;
@@ -119,6 +103,22 @@ function handleClient(request: NextRequest) {
     return NextResponse.redirect(u);
   }
   return NextResponse.rewrite(new URL(`/c${path}${url.search}`, url));
+}
+
+function handleAdmin(request: NextRequest) {
+  const url = request.nextUrl;
+  const path = url.pathname;
+  const hasSession = !!request.cookies.get(COOKIE_NAMES.tenant)?.value;
+
+  if (inList(path, PUBLIC_ADMIN)) {
+    return NextResponse.next();
+  }
+  if (!hasSession) {
+    const u = url.clone();
+    u.pathname = "/admin/auth/login";
+    return NextResponse.redirect(u);
+  }
+  return NextResponse.next();
 }
 
 export const config = {

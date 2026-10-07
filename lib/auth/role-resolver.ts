@@ -3,7 +3,6 @@ import { permissionsMatch } from "./permission-counts";
 export type RoleTemplateLite = {
   name: string;
   permissions: string[];
-  module?: string;
 };
 
 export function resolveUserRole(
@@ -13,7 +12,7 @@ export function resolveUserRole(
     fleetPermissions?: string[];
   },
   roleTemplates: RoleTemplateLite[] = [],
-  moduleContext?: "STATION" | "FLEET" | null
+  _moduleContext?: string | null
 ): string {
   if (user.isOwner) return "Owner";
 
@@ -24,9 +23,7 @@ export function resolveUserRole(
 
   if (!perms || perms.length === 0) return "User";
 
-  const relevantTemplates = moduleContext
-    ? roleTemplates.filter((t) => t.module === moduleContext)
-    : roleTemplates;
+  const relevantTemplates = roleTemplates;
 
   // 1. Exact match with a template
   const exact = relevantTemplates.find((t) => permissionsMatch(perms, t.permissions));

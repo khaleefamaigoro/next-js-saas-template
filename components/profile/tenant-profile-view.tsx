@@ -15,8 +15,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Fuel,
-  Truck,
   Check,
   Building,
 } from "lucide-react";
@@ -39,7 +37,6 @@ export interface TenantProfileData {
   isOwner: boolean;
   status: "ACTIVE" | "SUSPENDED";
   bannedReason?: string | null;
-  activeModules: string[];
   stationPermissions: string[];
   fleetPermissions: string[];
   failedLoginAttempts: number;
@@ -52,7 +49,6 @@ export interface TenantProfileData {
     slug: string;
     companyEmail?: string | null;
     companyPhone?: string | null;
-    activeModules?: string[];
   } | null;
   organization?: {
     id: string;
@@ -361,22 +357,6 @@ export function TenantProfileView({ initialUser }: TenantProfileViewProps) {
                   <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Account Role</dt>
                   <dd className="mt-1 text-foreground">
                     {user.isOwner ? "Tenant Account Owner" : "Staff Member"}
-                  </dd>
-                </div>
-
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Assigned Modules</dt>
-                  <dd className="mt-1.5 flex flex-wrap gap-1.5">
-                    {user.activeModules && user.activeModules.length > 0 ? (
-                      user.activeModules.map((m) => (
-                        <Badge key={m} variant="secondary" className="gap-1 text-xs py-0.5">
-                          {m === "STATION" ? <Fuel className="size-3" /> : <Truck className="size-3" />}
-                          {m === "STATION" ? "Station Operations" : "Fleet Logistics"}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground text-xs">No active modules</span>
-                    )}
                   </dd>
                 </div>
 

@@ -30,20 +30,13 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (!existing || existing.tenantId !== actor.tenantId) {
       throw new DomainError(404, "not_found", "Role template not found.");
     }
-    if (existing.module === "STATION") {
-      requireAnyPermission(actor, canWriteStationRoles(actor));
-      if (actor.organizationId && existing.organizationId && actor.organizationId !== existing.organizationId) {
-        throw new DomainError(403, "forbidden", "You can only edit roles in your organization.");
-      }
-    } else {
-      requireAnyPermission(actor, canWriteFleetRoles(actor));
-    }
+    requireAnyPermission(actor, canWriteFleetRoles(actor));
     if (existing.isSystem && existing.name === "Owner") {
       throw new DomainError(409, "system_role", "Owner role is immutable.");
     }
     const allowed = new Set<string>(ALL_TENANT_PERMISSION_KEYS);
     const cleaned = body.permissions
-      ? filterPermissionsForModule(body.permissions.filter((p) => allowed.has(p)), existing.module)
+      ? filterPermissionsForModule(body.permissions.filter((p) => allowed.has(p)))
       : undefined;
     const updated = await prisma.roleTemplate.update({
       where: { id },
@@ -59,7 +52,6 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       tenantId: actor.tenantId,
       targetType: "RoleTemplate",
       targetId: id,
-      module: updated.module,
       before: { name: existing.name, permissions: existing.permissions } as object,
       after: { name: updated.name, permissions: updated.permissions } as object,
       ip: meta.ip,

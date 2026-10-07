@@ -38,7 +38,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (!target || target.tenantId !== actor.tenantId) {
       throw new DomainError(404, "not_found", "User not found.");
     }
-    requireUserWriteAccess(actor, target);
+    requireUserWriteAccess(actor);
     const tenant = await prisma.tenant.findUnique({ where: { id: actor.tenantId } });
     if (!tenant) throw new DomainError(404, "not_found", "Tenant not found.");
 

@@ -50,7 +50,6 @@ export async function requirePlatformActor(permission?: PermissionKey): Promise<
 
 export async function requireTenantActor(
   permission?: PermissionKey,
-  module?: "FLEET" | "STATION" | "CORE"
 ): Promise<TenantActor> {
   const token = await readSessionToken("TENANT");
   const session = await getSession(token);
@@ -68,36 +67,19 @@ export async function requireTenantActor(
   if (!user || user.status !== "ACTIVE" || user.tenantId !== session.tenantId) {
     throw new AuthError(401, "User not found or inactive.");
   }
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: user.tenantId },
-    select: { activeModules: true }
-  });
-
-  if (module && tenant && !tenant.activeModules.includes(module)) {
-    throw new AuthError(403, `Module ${module} is not enabled for this tenant.`);
-  }
-
   const actor: TenantActor = {
     kind: "tenant",
     userId: user.id,
     tenantId: user.tenantId,
     isOwner: user.isOwner,
     organizationId: user.organizationId,
-    activeModules: user.activeModules as Array<"STATION" | "FLEET">,
     permissions: new Set([...user.stationPermissions, ...user.fleetPermissions]),
   };
-  const scopedPermissions =
-    module === "FLEET"
-      ? user.fleetPermissions
-      : module === "STATION"
-        ? user.stationPermissions
-        : [...user.stationPermissions, ...user.fleetPermissions];
   if (permission) {
-    const scopedActor = { ...actor, permissions: new Set(scopedPermissions) };
     const alternatives = MOBILE_EQUIVALENT_PERMISSIONS[permission] ?? [];
     const allowed =
-      hasPermission(scopedActor, permission) ||
-      alternatives.some((key) => hasPermission(scopedActor, key));
+      hasPermission(actor, permission) ||
+      alternatives.some((key) => hasPermission(actor, key));
     if (!allowed) {
       throw new AuthError(403, "Forbidden.");
     }
@@ -106,7 +88,22 @@ export async function requireTenantActor(
 }
 
 export async function requireClientActor(): Promise<ClientActor> {
-  throw new AuthError(401, "Client portal is not enabled in this starter.");
+  const token = await readSessionToken("CLIENT");
+  const session = await getSession(token);
+  if (!session || session.userType !== "CLIENT" || !session.tenantId) {
+    throw new AuthError(401, "Authentication required.");
+  }
+  if (session.scope !== "FULL") {
+    throw new AuthError(401, "Must complete password change.");
+  }
+  enterContext({ mode: "tenant-client", tenantId: session.tenantId });
+  const client = await prisma.client.findUnique({
+    where: { id: session.userId },
+  });
+  if (!client || client.status !== "ACTIVE" || client.tenantId !== session.tenantId) {
+    throw new AuthError(401, "Client not found or inactive.");
+  }
+  return { kind: "client", clientId: client.id, tenantId: client.tenantId };
 }
 
 /**

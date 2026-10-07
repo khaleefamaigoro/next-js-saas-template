@@ -126,22 +126,44 @@ export async function POST(request: Request) {
         ip: meta.ip,
         userAgent: meta.userAgent,
       });
-      const tenant = await prisma.tenant.findUnique({
-        where: { id: user.tenantId },
-        select: { activeModules: true },
-      });
-      const modules = user.activeModules.filter((m) => tenant?.activeModules.includes(m));
-      const redirect =
-        modules.includes("FLEET")
-          ? "/admin"
-          : modules.includes("STATION")
-            ? "/admin/station"
-            : "/admin/auth/login?error=no_access";
-      return ok({ redirect, token });
+      return ok({ redirect: "/admin", token });
     }
 
     if (session.userType === "CLIENT") {
-      throw new DomainError(400, "not_supported", "Client portal is not enabled.");
+      const user = await prisma.client.findUnique({ where: { id: session.userId } });
+      if (!user) throw new DomainError(401, "unauthorized", "User not found.");
+      if (!user.passwordHash || !(await verifyPassword(user.passwordHash, currentPassword))) {
+        throw new DomainError(401, "invalid_credentials", "Current password incorrect.");
+      }
+      const reuse = await assertNotReused("CLIENT", user.id, newPassword);
+      if (!reuse.ok) throw new DomainError(400, "password_reused", "Cannot reuse a recent password.");
+
+      const newHash = await hashPassword(newPassword);
+      await prisma.client.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash, mustChangePassword: false },
+      });
+      await recordPassword("CLIENT", user.id, newHash);
+      await revokeAllSessionsForUser("CLIENT", user.id);
+      const { token } = await createSession({
+        userId: user.id,
+        userType: "CLIENT",
+        tenantId: user.tenantId,
+        scope: "FULL",
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      });
+      await audit({
+        actorType: "CLIENT",
+        actorId: user.id,
+        action: "auth.change_password",
+        tenantId: user.tenantId,
+        targetType: "Client",
+        targetId: user.id,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      });
+      return ok({ redirect: "/dashboard", token });
     }
 
     throw new DomainError(400, "not_supported", "Unsupported session type.");

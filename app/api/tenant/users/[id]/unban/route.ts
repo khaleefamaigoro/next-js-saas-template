@@ -20,7 +20,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (target.status === "ACTIVE") {
       throw new DomainError(409, "not_banned", "This user is not banned.");
     }
-    requireUserWriteAccess(actor, target);
+    requireUserWriteAccess(actor);
 
     await prisma.tenantUser.update({
       where: { id },

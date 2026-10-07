@@ -8,12 +8,10 @@ import { requireCsrf } from "@/lib/api/csrf-guard";
 import { dispatchNotificationMessage, getChannelSettings } from "@/lib/notifications/dispatch";
 import { notificationPermission } from "@/lib/notifications/permissions";
 
-const ModuleSchema = z.enum(["STATION", "FLEET"]);
 const ChannelSchema = z.enum(["SMS", "EMAIL", "MESSAGE", "IN_APP"]);
 const AudienceSchema = z.enum(["ALL_MODULE_USERS", "STATION", "ORGANIZATION", "USERS"]);
 
 const CreateSchema = z.object({
-  module: ModuleSchema,
   title: z.string().min(1).max(160),
   body: z.string().min(1).max(4000),
   channels: z.array(ChannelSchema).min(1),
@@ -22,14 +20,12 @@ const CreateSchema = z.object({
   send: z.boolean().optional().default(true),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const url = new URL(request.url);
-    const module = ModuleSchema.parse(url.searchParams.get("module") ?? "STATION");
-    const actor = await requireTenantActor(notificationPermission(module, false), module);
+    const actor = await requireTenantActor(notificationPermission(false));
 
     const messages = await prisma.notificationMessage.findMany({
-      where: { tenantId: actor.tenantId, module },
+      where: { tenantId: actor.tenantId },
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
@@ -48,14 +44,14 @@ export async function POST(request: Request) {
   try {
     await requireCsrf(request);
     const body = CreateSchema.parse(await request.json());
-    const actor = await requireTenantActor(notificationPermission(body.module, true), body.module);
+    const actor = await requireTenantActor(notificationPermission(true));
     const meta = requestMeta(request);
 
     if (body.audienceType !== "ALL_MODULE_USERS" && body.audienceIds.length === 0) {
       throw new DomainError(400, "validation", "Select at least one audience target.");
     }
 
-    const settings = await getChannelSettings(actor.tenantId, body.module);
+    const settings = await getChannelSettings(actor.tenantId);
     const enabled = new Set(settings.filter((s) => s.enabled).map((s) => s.channel));
     const channels = body.channels.filter((channel) => enabled.has(channel));
     if (channels.length === 0) {
@@ -65,7 +61,6 @@ export async function POST(request: Request) {
     const created = await prisma.notificationMessage.create({
       data: {
         tenantId: actor.tenantId,
-        module: body.module,
         title: body.title,
         body: body.body,
         channels,
@@ -77,7 +72,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const message = body.send ? await dispatchNotificationMessage(created) : created
+    const message = body.send ? await dispatchNotificationMessage(created) : created;
 
     await audit({
       actorType: "TENANT_USER",
@@ -86,7 +81,7 @@ export async function POST(request: Request) {
       tenantId: actor.tenantId,
       targetType: "NotificationMessage",
       targetId: message.id,
-      after: { title: message.title, module: message.module, status: message.status } as object,
+      after: { title: message.title, status: message.status } as object,
       ip: meta.ip,
       userAgent: meta.userAgent,
     });

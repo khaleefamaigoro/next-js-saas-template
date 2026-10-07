@@ -9,7 +9,6 @@ import {
   isFleetPermissionKey,
   isMobilePermissionKey,
   PERMISSIONS,
-  splitTenantPermissions,
 } from "@/lib/auth/permissions";
 import { Save, KeyRound, ShieldAlert, ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -24,7 +23,7 @@ import {
 
 const allActions = ["read", "write", "approve"];
 
-type RoleOption = { id: string; name: string; permissions: string[]; module?: string };
+type RoleOption = { id: string; name: string; permissions: string[] };
 
 export function UserDetailActions({
   scope,
@@ -87,20 +86,7 @@ export function UserDetailActions({
     }
     if (res.data?.permissions) {
       const applied = res.data.permissions;
-      const role = roles.find((r) => r.id === roleId);
-      if (isTenant && role?.module) {
-        const next = new Set(selected);
-        const replaceFleet = role.module === "FLEET";
-        for (const key of Array.from(next)) {
-          if (replaceFleet ? isFleetPermissionKey(key) : !isFleetPermissionKey(key)) {
-            next.delete(key);
-          }
-        }
-        for (const key of applied) next.add(key);
-        setSelected(next);
-      } else {
-        setSelected(new Set(applied));
-      }
+      setSelected(new Set(applied));
       setInfo("Role template applied successfully.");
     }
   }
@@ -113,13 +99,10 @@ export function UserDetailActions({
     const res = isTenant
       ? await apiPatch<{ permissions: string[] }>(
           permissionsEndpoint,
-          moduleContext
-            ? { module: moduleContext, permissions: keys }
-            : splitTenantPermissions(keys),
+          { permissions: keys },
         )
       : await apiPatch<{ permissions: string[] }>(permissionsEndpoint, {
           permissions: keys,
-          module: moduleContext,
         });
     setPending(null);
     if (res.error) {
@@ -203,7 +186,7 @@ export function UserDetailActions({
                       {roles.map((r) => (
                         <CommandItem
                           key={r.id}
-                          value={`${r.name} ${r.module ?? ""}`.toLowerCase()}
+                          value={r.name.toLowerCase()}
                           onSelect={() => {
                             setRoleId(r.id);
                             setOpenRoleSelect(false);
@@ -212,11 +195,6 @@ export function UserDetailActions({
                         >
                           <span>
                             {r.name}
-                            {r.module && (
-                              <span className="ml-1 text-muted-foreground">
-                                ({r.module === "STATION" ? "Station" : "Fleet"})
-                              </span>
-                            )}
                           </span>
                           {roleId === r.id && <Check className="h-3.5 w-3.5 text-primary" />}
                         </CommandItem>

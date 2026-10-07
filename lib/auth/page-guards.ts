@@ -46,7 +46,6 @@ export async function requirePlatformPage(
 
 export async function requireTenantPage(
   permission?: PermissionKey,
-  module?: "FLEET" | "STATION" | "CORE"
 ): Promise<TenantActor> {
   const session = await getSession(await readSessionToken("TENANT"));
   if (!session || session.userType !== "TENANT" || !session.tenantId) {
@@ -65,20 +64,10 @@ export async function requireTenantPage(
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: user.tenantId },
-    select: { 
-      status: true,
-      activeModules: true,
-      modules: {
-        where: { status: "ACTIVE" }
-      }
-    },
+    select: { status: true },
   });
   if (!tenant) redirect("/admin/auth/login");
   if (tenant.status !== "ACTIVE") redirect("/maintenance");
-
-  if (module && !tenant.activeModules.includes(module) && !tenant.activeModules.includes("CORE")) {
-    redirect("/admin/auth/login?error=no_access");
-  }
 
   const actor: TenantActor = {
     kind: "tenant",
@@ -86,29 +75,36 @@ export async function requireTenantPage(
     tenantId: user.tenantId,
     isOwner: user.isOwner,
     organizationId: user.organizationId,
-    activeModules: user.activeModules as Array<"STATION" | "FLEET">,
     permissions: new Set([...user.stationPermissions, ...user.fleetPermissions]),
   };
-  const scopedPermissions =
-    module === "FLEET"
-      ? user.fleetPermissions
-      : module === "STATION"
-        ? user.stationPermissions
-        : [...user.stationPermissions, ...user.fleetPermissions];
-  if (
-    permission &&
-    !hasPermission({ ...actor, permissions: new Set(scopedPermissions) }, permission)
-  ) {
-    // Fleet-only pages know their area; other pages default to the Fleet
-    // home (the primary /admin surface) since we can't cheaply resolve
-    // which module the caller belongs to at this layer.
-    redirect(module === "STATION" ? "/admin/station/unauthorized" : "/admin/unauthorized");
+  if (permission && !hasPermission(actor, permission)) {
+    redirect("/admin/unauthorized");
   }
   return actor;
 }
 
 export async function requireClientPage(): Promise<ClientActor> {
-  redirect("/auth/login");
+  const session = await getSession(await readSessionToken("CLIENT"));
+  if (!session || session.userType !== "CLIENT" || !session.tenantId) {
+    redirect("/auth/login");
+  }
+  if (session.scope === "MUST_CHANGE_PASSWORD") {
+    redirect("/auth/change-password");
+  }
+  enterContext({ mode: "tenant-client", tenantId: session.tenantId });
+  const client = await prisma.client.findUnique({
+    where: { id: session.userId },
+  });
+  if (!client || client.status !== "ACTIVE" || client.tenantId !== session.tenantId) {
+    redirect("/auth/login");
+  }
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: client.tenantId },
+    select: { status: true },
+  });
+  if (!tenant) redirect("/auth/login");
+  if (tenant.status !== "ACTIVE") redirect("/maintenance");
+  return { kind: "client", clientId: client.id, tenantId: client.tenantId };
 }
 
 const DASHBOARD_BY_AREA = {

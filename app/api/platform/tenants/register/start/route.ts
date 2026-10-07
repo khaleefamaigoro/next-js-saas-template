@@ -35,7 +35,6 @@ export const PlatformRegisterBody = z.object({
   status: z.enum(["ACTIVE", "SUSPENDED"]).default("ACTIVE"),
   enableTrial: z.boolean().default(true),
   trialDays: z.coerce.number().int().min(0).max(365).default(14),
-  activeModules: z.array(z.string()).default(["FLEET", "STATION"]),
   mustChangePassword: z.boolean().default(false),
 });
 

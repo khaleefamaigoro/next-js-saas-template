@@ -10,7 +10,7 @@ export function PoweredBy({ className, labelClassName }: PoweredByProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center", className)}>
       <p className={cn("text-[15px] font-semibold mb-2 text-center", labelClassName)}>
-        Powered by
+        ******
       </p>
       {POWERED_BY_LOGO_URL ? (
         <img

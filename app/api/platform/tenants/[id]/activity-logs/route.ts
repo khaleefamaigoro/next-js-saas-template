@@ -19,12 +19,10 @@ export async function GET(
     const action = url.searchParams.get("action");
     const date = url.searchParams.get("date");
     const userId = url.searchParams.get("userId");
-    const moduleFilter = url.searchParams.get("module") as "STATION" | "FLEET" | null;
     const statusFilter = url.searchParams.get("status") as "SUCCESS" | "FAILED" | null;
 
     const baseWhere: Record<string, unknown> = {
       tenantId,
-      ...(moduleFilter ? { module: moduleFilter } : {}),
     };
     if (action) {
       baseWhere.action = { contains: action, mode: "insensitive" };

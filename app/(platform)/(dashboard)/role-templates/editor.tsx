@@ -200,7 +200,7 @@ export function RoleEditor({
     setPending(true);
     const res = await apiPost<{ role: { id: string } }>(
       scope === "platform" ? "/api/platform/role-templates" : "/api/tenant/role-templates",
-      { name: name.trim(), permissions: Array.from(selected), module: moduleContext, organizationId }
+      { name: name.trim(), permissions: Array.from(selected), organizationId }
     );
     setPending(false);
     if (res.error) {

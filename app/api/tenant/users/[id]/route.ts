@@ -21,15 +21,7 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
       throw new DomainError(409, "owner_protected", "Transfer ownership before deleting the owner.");
     }
 
-    const isStationOnly = target.activeModules.includes("STATION") && !target.activeModules.includes("FLEET");
-    if (isStationOnly) {
-      requireAnyPermission(actor, canWriteStationUsers(actor));
-      if (actor.organizationId && target.organizationId && actor.organizationId !== target.organizationId) {
-        throw new DomainError(403, "forbidden", "You can only manage users in your organization.");
-      }
-    } else {
-      requireAnyPermission(actor, canWriteFleetUsers(actor));
-    }
+    requireAnyPermission(actor, canWriteFleetUsers(actor));
     await prisma.tenantUser.update({
       where: { id },
       data: { status: "SUSPENDED" },

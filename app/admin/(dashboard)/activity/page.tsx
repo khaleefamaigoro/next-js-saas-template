@@ -34,7 +34,7 @@ export default async function TenantActivityPage({
   const skip = (page - 1) * take;
 
   const andConditions: Record<string, unknown>[] = [
-    { tenantId: actor.tenantId, module: "FLEET" },
+    { tenantId: actor.tenantId },
   ];
 
   if (actionParam && actionParam.trim()) {
@@ -83,7 +83,7 @@ export default async function TenantActivityPage({
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-  const moduleOverviewWhere = { tenantId: actor.tenantId, module: "FLEET" as const };
+  const moduleOverviewWhere = { tenantId: actor.tenantId };
 
   const [totalCount, rows, statsTotal, failedCount, todayCount, allTenantUsers] = await Promise.all([
     prisma.activityLog.count({ where: whereClause }),

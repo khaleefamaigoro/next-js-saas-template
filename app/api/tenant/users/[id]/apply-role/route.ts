@@ -6,11 +6,9 @@ import { audit, requestMeta } from "@/lib/auth/audit";
 import { ok } from "@/lib/api/respond";
 import { handleError, DomainError } from "@/lib/api/errors";
 import { requireCsrf } from "@/lib/api/csrf-guard";
-import type { AppModule } from "@/lib/generated/prisma/client";
 import {
   assertRoleUsable,
   canWriteFleetUsers,
-  canWriteStationUsers,
   filterPermissionsForModule,
   requireAnyPermission,
 } from "@/lib/auth/membership";
@@ -33,34 +31,15 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       throw new DomainError(409, "owner_protected", "Owner permissions cannot be reduced.");
     }
 
-    const preview = await prisma.roleTemplate.findUnique({ where: { id: roleTemplateId } });
-    const mode = preview?.module === "STATION" ? "STATION" : "FLEET";
-    if (mode === "STATION") requireAnyPermission(actor, canWriteStationUsers(actor));
-    else requireAnyPermission(actor, canWriteFleetUsers(actor));
+    requireAnyPermission(actor, canWriteFleetUsers(actor));
 
-    if (mode === "STATION") {
-      if (actor.organizationId && target.organizationId && actor.organizationId !== target.organizationId) {
-        throw new DomainError(403, "forbidden", "You can only manage users in your organization.");
-      }
-    }
-
-    const role = await assertRoleUsable({ actor, roleId: roleTemplateId, mode });
+    const role = await assertRoleUsable({ actor, roleId: roleTemplateId });
     const allowed = new Set<string>(ALL_TENANT_PERMISSION_KEYS);
-    const perms = filterPermissionsForModule(role.permissions.filter((p) => allowed.has(p)), mode);
-
-    const tenant = await prisma.tenant.findUnique({ where: { id: actor.tenantId }, select: { activeModules: true } });
-    if (!tenant || !tenant.activeModules.includes(role.module)) {
-      throw new DomainError(403, "module_disabled", `Tenant does not have access to the ${role.module} module.`);
-    }
-
-    const before = mode === "STATION" ? target.stationPermissions : target.fleetPermissions;
-    const activeModules = Array.from(new Set<AppModule>([...target.activeModules, mode]));
+    const perms = filterPermissionsForModule(role.permissions.filter((p) => allowed.has(p)));
 
     await prisma.tenantUser.update({
       where: { id },
-      data: mode === "STATION"
-        ? { stationPermissions: perms, activeModules }
-        : { fleetPermissions: perms, activeModules },
+      data: { fleetPermissions: perms },
     });
     await audit({
       actorType: "TENANT_USER",
@@ -69,8 +48,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       tenantId: actor.tenantId,
       targetType: "TenantUser",
       targetId: id,
-      module: role.module,
-      before: { permissions: before } as object,
+      before: { permissions: target.fleetPermissions } as object,
       after: { permissions: perms, role: role.name } as object,
       ip: meta.ip,
       userAgent: meta.userAgent,

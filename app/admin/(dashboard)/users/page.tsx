@@ -7,15 +7,15 @@ import { TenantUsersTable } from "./table";
 import { resolveUserRole } from "@/lib/auth/role-resolver";
 
 export default async function TenantUsersPage() {
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_READ.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_READ.key);
   
   const take = 25;
   const skip = 0;
 
   const [totalCount, users, roleTemplates] = await Promise.all([
-    prisma.tenantUser.count({ where: { tenantId: actor.tenantId, activeModules: { has: "FLEET" } } }),
+    prisma.tenantUser.count({ where: { tenantId: actor.tenantId } }),
     prisma.tenantUser.findMany({
-      where: { tenantId: actor.tenantId, activeModules: { has: "FLEET" } },
+      where: { tenantId: actor.tenantId },
       orderBy: { createdAt: "asc" },
       take,
       skip,
@@ -32,8 +32,8 @@ export default async function TenantUsersPage() {
       },
     }),
     prisma.roleTemplate.findMany({
-      where: { scope: "TENANT", tenantId: actor.tenantId, module: "FLEET" },
-      select: { name: true, permissions: true, module: true },
+      where: { scope: "TENANT", tenantId: actor.tenantId },
+      select: { name: true, permissions: true },
     }),
   ]);
 
@@ -45,7 +45,7 @@ export default async function TenantUsersPage() {
     isOwner: u.isOwner,
     status: u.status,
     lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
-    role: resolveUserRole(u, roleTemplates, "FLEET"),
+    role: resolveUserRole(u, roleTemplates),
   }));
 
   const totalPages = Math.ceil(totalCount / take);

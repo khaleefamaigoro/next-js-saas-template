@@ -47,7 +47,7 @@ export function InviteTenantUserForm({
   organizationId,
   successRedirect,
 }: {
-  roles: { id: string; name: string; permissions: string[]; module: string }[];
+  roles: { id: string; name: string; permissions: string[] }[];
   allPermissions: readonly string[];
   moduleContext?: "STATION" | "FLEET";
   organizationId?: string | null;
@@ -93,21 +93,8 @@ export function InviteTenantUserForm({
 
   const onSubmit = handleSubmit(async (values) => {
     setError(null);
-    const perms = values.permissions ?? [];
-    const hasFleetPerm = perms.some((p) => isFleetPermissionKey(p));
-    const hasStationOrMobilePerm = perms.some((p) => !isFleetPermissionKey(p));
-    const activeModules = Array.from(
-      new Set([
-        ...(hasFleetPerm ? ["FLEET"] : []),
-        ...(hasStationOrMobilePerm ? ["STATION"] : []),
-      ])
-    );
     const payload = {
       ...values,
-      activeModules: moduleContext === "STATION"
-        ? ["STATION"]
-        : (activeModules.length > 0 ? activeModules : ["FLEET"]),
-      inviteContext: moduleContext,
       organizationId: moduleContext === "STATION" ? organizationId : undefined,
     };
     const res = await apiPost<{ user: { id: string } }>("/api/tenant/users", payload);
@@ -304,7 +291,7 @@ export function InviteTenantUserForm({
                               {roles.map((r) => (
                                 <CommandItem
                                   key={r.id}
-                                  value={`${r.name} ${r.module}`.toLowerCase()}
+                                  value={r.name.toLowerCase()}
                                   onSelect={() => {
                                     field.onChange(r.id);
                                     setOpenRoleSelect(false);
@@ -313,9 +300,6 @@ export function InviteTenantUserForm({
                                 >
                                   <span>
                                     {r.name}
-                                    <span className="ml-1.5 text-xs text-muted-foreground">
-                                      ({r.module === "STATION" ? "Station" : "Fleet"})
-                                    </span>
                                   </span>
                                   {field.value === r.id && (
                                     <Check className="h-4 w-4 text-primary" />

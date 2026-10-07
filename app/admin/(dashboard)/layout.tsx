@@ -21,6 +21,12 @@ const ADMIN_NAV = [
     permission: PERMISSIONS.TENANT_USERS_READ.key,
   },
   {
+    href: "/admin/clients",
+    title: "Clients",
+    icon: "UserGroupIcon",
+    permission: PERMISSIONS.TENANT_CLIENTS_READ.key,
+  },
+  {
     href: "/admin/role-templates",
     title: "Roles",
     icon: "Shield01Icon",

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shell";
 import { TenantProfileView } from "@/components/profile/tenant-profile-view";
 
 export default async function FleetProfilePage() {
-  const actor = await requireTenantPage(undefined, "FLEET");
+  const actor = await requireTenantPage();
   const user = await prisma.tenantUser.findUnique({
     where: { id: actor.userId },
     include: {
@@ -16,7 +16,6 @@ export default async function FleetProfilePage() {
           slug: true,
           companyEmail: true,
           companyPhone: true,
-          activeModules: true,
         },
       },
     },
@@ -36,7 +35,6 @@ export default async function FleetProfilePage() {
     isOwner: user.isOwner,
     status: user.status,
     bannedReason: user.bannedReason,
-    activeModules: user.activeModules,
     stationPermissions: user.stationPermissions,
     fleetPermissions: user.fleetPermissions,
     failedLoginAttempts: user.failedLoginAttempts,

@@ -21,7 +21,7 @@ export async function POST(
       throw new DomainError(404, "not_found", "Notification not found.");
     }
 
-    await requireTenantActor(notificationPermission(existing.module, true), existing.module);
+    await requireTenantActor(notificationPermission(true));
 
     if (existing.status === "SENT") {
       throw new DomainError(400, "already_sent", "This notification has already been sent.");

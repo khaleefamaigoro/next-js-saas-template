@@ -6,11 +6,11 @@ import { InviteTenantUserForm } from "./invite-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function NewTenantUserPage() {
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_WRITE.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_WRITE.key);
   const roles = await prisma.roleTemplate.findMany({
-    where: { scope: "TENANT", tenantId: actor.tenantId, module: "FLEET", organizationId: null },
+    where: { scope: "TENANT", tenantId: actor.tenantId, organizationId: null },
     orderBy: [{ isSystem: "desc" }, { name: "asc" }],
-    select: { id: true, name: true, permissions: true, module: true },
+    select: { id: true, name: true, permissions: true },
   });
 
   return (

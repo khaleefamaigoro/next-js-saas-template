@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 
 type Channel = "SMS" | "EMAIL" | "MESSAGE" | "IN_APP";
 type AudienceType = "ALL_MODULE_USERS" | "STATION" | "ORGANIZATION" | "USERS";
-type AppModule = "STATION" | "FLEET";
 
 const CHANNEL_META: { id: Channel; label: string; hint: string; icon: typeof Phone }[] = [
   { id: "SMS", label: "Phone / SMS", hint: "Send to the user's phone number", icon: Phone },
@@ -46,14 +45,12 @@ export type NotificationRow = {
 };
 
 export function NotificationsManager({
-  module,
   settings: initialSettings,
   messages: initialMessages,
   users,
   stations = [],
   organizations = [],
 }: {
-  module: AppModule;
   settings: { channel: Channel; enabled: boolean }[];
   messages: NotificationRow[];
   users: { id: string; firstName?: string | null; lastName?: string | null; email: string }[];
@@ -105,7 +102,7 @@ export function NotificationsManager({
     setError(null);
     const res = await apiPatch<{ settings: { channel: Channel; enabled: boolean }[] }>(
       "/api/tenant/notifications/settings",
-      { module, channels: next }
+      { channels: next }
     );
     setSavingSettings(false);
     if (res.error) {
@@ -121,7 +118,6 @@ export function NotificationsManager({
     setSending(true);
     setError(null);
     const res = await apiPost("/api/tenant/notifications", {
-      module,
       title,
       body,
       channels,
@@ -143,7 +139,7 @@ export function NotificationsManager({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold">{module === "FLEET" ? "Fleet" : "Station"} Notifications</h1>
+        <h1 className="text-xl font-bold">Notifications</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Compose a message, pick the audience, and choose which channels to use.
         </p>
@@ -223,7 +219,7 @@ export function NotificationsManager({
           <CardHeader>
             <CardTitle className="text-base">Audience</CardTitle>
             <CardDescription>
-              Choose who should receive this {module === "FLEET" ? "fleet" : "station"} notice.
+              Choose who should receive this notice.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,9 +236,8 @@ export function NotificationsManager({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="w-full">
-                  <SelectItem value="ALL_MODULE_USERS">All {module === "FLEET" ? "fleet" : "station"} users</SelectItem>
-                  {module === "STATION" && <SelectItem value="STATION">Specific stations</SelectItem>}
-                  {module === "FLEET" && <SelectItem value="ORGANIZATION">Specific organizations</SelectItem>}
+                  <SelectItem value="ALL_MODULE_USERS">All users</SelectItem>
+                  <SelectItem value="ORGANIZATION">Specific organizations</SelectItem>
                   <SelectItem value="USERS">Specific users</SelectItem>
                 </SelectContent>
               </Select>
@@ -250,7 +245,7 @@ export function NotificationsManager({
 
             {audienceType === "ALL_MODULE_USERS" ? (
               <p className="rounded-lg border bg-muted/30 px-3 py-6 text-sm text-muted-foreground text-center">
-                Every active {module === "FLEET" ? "fleet" : "station"} user will receive this message.
+                Every active user will receive this message.
               </p>
             ) : (
               <div className="max-h-80 overflow-y-auto rounded-lg border divide-y">

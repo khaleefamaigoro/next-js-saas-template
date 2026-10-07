@@ -13,7 +13,6 @@ export type AuditInput = {
   after?: unknown;
   ip?: string | null;
   userAgent?: string | null;
-  module?: "STATION" | "FLEET" | "CORE";
 };
 
 export async function audit(input: AuditInput): Promise<void> {
@@ -29,7 +28,6 @@ export async function audit(input: AuditInput): Promise<void> {
       afterJson: input.after !== undefined ? (input.after as Prisma.InputJsonValue) : undefined,
       ip: input.ip ?? null,
       userAgent: input.userAgent ?? null,
-      ...(input.module ? { module: input.module } : {}),
     },
   });
 }

@@ -6,17 +6,17 @@ import { DataTableToolbar } from "@/components/data-table-toolbar";
 import { RolesCards } from "@/app/(platform)/(dashboard)/role-templates/roles-cards";
 
 export default async function TenantRolesPage() {
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_ROLES_READ.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_ROLES_READ.key);
   const canEdit = hasPermission(actor, PERMISSIONS.TENANT_ROLES_WRITE.key);
 
   const [roles, fleetUsers] = await Promise.all([
     prisma.roleTemplate.findMany({
-      where: { scope: "TENANT", tenantId: actor.tenantId, module: "FLEET" },
+      where: { scope: "TENANT", tenantId: actor.tenantId },
       orderBy: [{ isSystem: "desc" }, { name: "asc" }],
       select: { id: true, name: true, isSystem: true, permissions: true },
     }),
     prisma.tenantUser.findMany({
-      where: { tenantId: actor.tenantId, activeModules: { has: "FLEET" } },
+      where: { tenantId: actor.tenantId },
       select: { fleetPermissions: true },
     }),
   ]);

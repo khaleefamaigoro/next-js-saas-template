@@ -134,7 +134,7 @@ export function TenantUsersTable({
 }) {
   const { data, meta, isLoading, setPage, setPageSize, setInitialData } = usePaginatedQuery<TenantUserRow>({
     baseUrl: "/api/tenant/users",
-    additionalParams: { module: moduleContext },
+    additionalParams: {},
   });
 
   useEffect(() => {

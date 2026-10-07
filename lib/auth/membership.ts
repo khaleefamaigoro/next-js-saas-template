@@ -3,8 +3,6 @@ import { DomainError } from "@/lib/api/errors";
 import { hasPermission, PERMISSIONS, type TenantActor } from "@/lib/auth/permissions";
 import { AuthError } from "@/lib/auth/guards";
 
-export type MembershipMode = "FLEET" | "STATION" | "CORE";
-
 export function canManageFleetUsers(actor: TenantActor): boolean {
   return hasPermission(actor, PERMISSIONS.TENANT_USERS_READ.key) ||
     hasPermission(actor, PERMISSIONS.TENANT_USERS_WRITE.key);
@@ -39,29 +37,24 @@ export function canWriteStationRoles(actor: TenantActor): boolean {
   return canWriteFleetRoles(actor);
 }
 
-export function requireAnyPermission(actor: TenantActor, ok: boolean): void {
+export function requireAnyPermission(_actor: TenantActor, ok: boolean): void {
   if (!ok) throw new AuthError(403, "Forbidden.");
 }
 
-export function requireUserWriteAccess(
-  actor: TenantActor,
-  _target: { organizationId: string | null; activeModules: Array<"STATION" | "FLEET" | "CORE"> | string[] },
-): void {
+export function requireUserWriteAccess(actor: TenantActor): void {
   requireAnyPermission(actor, canWriteFleetUsers(actor));
 }
 
-export function filterPermissionsForModule(keys: string[], _module: MembershipMode): string[] {
+export function filterPermissionsForModule(keys: string[]): string[] {
   return keys;
 }
 
 export async function assertRoleUsable(params: {
   actor: TenantActor;
   roleId: string;
-  mode: MembershipMode;
 }): Promise<{
   id: string;
   name: string;
-  module: "STATION" | "FLEET" | "CORE";
   permissions: string[];
   organizationId: string | null;
   isSystem: boolean;
@@ -73,7 +66,6 @@ export async function assertRoleUsable(params: {
   return {
     id: role.id,
     name: role.name,
-    module: role.module,
     permissions: role.permissions,
     organizationId: role.organizationId,
     isSystem: role.isSystem,

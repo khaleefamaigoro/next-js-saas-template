@@ -77,7 +77,6 @@ const CompanySchema = z.object({
   status: z.enum(["ACTIVE", "SUSPENDED"]),
   enableTrial: z.boolean(),
   trialDays: z.number().int().min(0).max(365),
-  activeModules: z.array(z.string()),
 });
 
 type AccountValues = z.infer<typeof AccountSchema>;
@@ -639,7 +638,6 @@ function CompanyForm({
       status: "ACTIVE",
       enableTrial: true,
       trialDays: 14,
-      activeModules: ["FLEET", "STATION"],
     },
   });
 
@@ -647,7 +645,6 @@ function CompanyForm({
   const country = watch("country");
   const status = watch("status");
   const enableTrial = watch("enableTrial");
-  const activeModules = watch("activeModules") || [];
 
   const [slugStatus, setSlugStatus] = useState<string | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
@@ -682,22 +679,6 @@ function CompanyForm({
   }
 
   const submit = handleSubmit((v) => onSubmit(v));
-
-  function toggleModule(mod: string) {
-    if (activeModules.includes(mod)) {
-      if (activeModules.length === 1) {
-        toast.error("At least one module must be selected.");
-        return;
-      }
-      setValue(
-        "activeModules",
-        activeModules.filter((m) => m !== mod),
-        { shouldValidate: true }
-      );
-    } else {
-      setValue("activeModules", [...activeModules, mod], { shouldValidate: true });
-    }
-  }
 
   return (
     <form onSubmit={submit}>
@@ -954,51 +935,6 @@ function CompanyForm({
             </FormField>
           </div>
 
-          {/* Active Modules */}
-          <div>
-            <span className="block text-xs font-medium text-muted-foreground mb-2">
-              Active application modules
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div
-                onClick={() => toggleModule("STATION")}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  activeModules.includes("STATION")
-                    ? "border-primary/40 bg-primary/5 text-foreground"
-                    : "border-border bg-background text-muted-foreground"
-                }`}
-              >
-                <Checkbox
-                  id="mod-station"
-                  checked={activeModules.includes("STATION")}
-                  onCheckedChange={() => toggleModule("STATION")}
-                />
-                <div>
-                  <div className="text-xs font-medium">Station Management</div>
-                  <div className="text-[11px] text-muted-foreground">Pumps, tanks, sales logs, shift tracking</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => toggleModule("FLEET")}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  activeModules.includes("FLEET")
-                    ? "border-primary/40 bg-primary/5 text-foreground"
-                    : "border-border bg-background text-muted-foreground"
-                }`}
-              >
-                <Checkbox
-                  id="mod-fleet"
-                  checked={activeModules.includes("FLEET")}
-                  onCheckedChange={() => toggleModule("FLEET")}
-                />
-                <div>
-                  <div className="text-xs font-medium">Fleet Logistics</div>
-                  <div className="text-[11px] text-muted-foreground">Trucks, drivers, waybills, transport orders</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Navigation */}

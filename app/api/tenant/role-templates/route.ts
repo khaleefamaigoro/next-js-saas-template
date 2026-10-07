@@ -8,53 +8,26 @@ import { handleError, DomainError } from "@/lib/api/errors";
 import { requireCsrf } from "@/lib/api/csrf-guard";
 import {
   canManageFleetRoles,
-  canManageStationRoles,
   canWriteFleetRoles,
-  canWriteStationRoles,
   filterPermissionsForModule,
   requireAnyPermission,
 } from "@/lib/auth/membership";
-import { resolveActiveOrgIdFromCookie } from "@/lib/auth/org-scope";
 
 const CreateBody = z.object({
   name: z.string().min(1).max(80),
-  module: z.enum(["STATION", "FLEET"]),
   permissions: z.array(z.string()).min(0),
   organizationId: z.string().optional().nullable(),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const actor = await requireTenantActor();
-    const url = new URL(request.url);
-    const moduleFilter = url.searchParams.get("module") as "STATION" | "FLEET" | null;
-    const organizationId = url.searchParams.get("organizationId");
-
-    if (moduleFilter === "STATION") {
-      requireAnyPermission(actor, canManageStationRoles(actor));
-    } else {
-      requireAnyPermission(actor, canManageFleetRoles(actor));
-    }
-
-    const orgId =
-      moduleFilter === "STATION"
-        ? actor.organizationId || organizationId || (await resolveActiveOrgIdFromCookie(actor))
-        : null;
+    requireAnyPermission(actor, canManageFleetRoles(actor));
 
     const rows = await prisma.roleTemplate.findMany({
       where: {
         scope: "TENANT",
         tenantId: actor.tenantId,
-        ...(moduleFilter ? { module: moduleFilter } : {}),
-        ...(moduleFilter === "FLEET" ? { organizationId: null } : {}),
-        ...(moduleFilter === "STATION"
-          ? {
-              OR: [
-                { organizationId: null, isSystem: true, module: "STATION" },
-                ...(orgId ? [{ organizationId: orgId, module: "STATION" as const }] : []),
-              ],
-            }
-          : {}),
       },
       orderBy: [{ isSystem: "desc" }, { name: "asc" }],
     });
@@ -71,34 +44,17 @@ export async function POST(request: Request) {
     const body = CreateBody.parse(await request.json());
     const meta = requestMeta(request);
 
-    if (body.module === "STATION") {
-      requireAnyPermission(actor, canWriteStationRoles(actor));
-    } else {
-      requireAnyPermission(actor, canWriteFleetRoles(actor));
-    }
-
-    const organizationId =
-      body.module === "FLEET"
-        ? null
-        : actor.organizationId || body.organizationId || (await resolveActiveOrgIdFromCookie(actor));
-
-    if (body.module === "STATION" && !organizationId) {
-      throw new DomainError(400, "invalid_input", "An organization is required to create station roles.");
-    }
+    requireAnyPermission(actor, canWriteFleetRoles(actor));
 
     const allowed = new Set<string>(ALL_TENANT_PERMISSION_KEYS);
-    const cleaned = filterPermissionsForModule(
-      body.permissions.filter((p) => allowed.has(p)),
-      body.module,
-    );
+    const cleaned = filterPermissionsForModule(body.permissions.filter((p) => allowed.has(p)));
 
     const existing = await prisma.roleTemplate.findFirst({
       where: {
         scope: "TENANT",
         tenantId: actor.tenantId,
-        module: body.module,
         name: body.name,
-        organizationId,
+        organizationId: body.organizationId ?? null,
       },
     });
     if (existing) throw new DomainError(409, "name_taken", "Role name already exists.");
@@ -108,10 +64,9 @@ export async function POST(request: Request) {
         scope: "TENANT",
         tenantId: actor.tenantId,
         name: body.name,
-        module: body.module,
         permissions: cleaned,
         isSystem: false,
-        organizationId,
+        organizationId: body.organizationId ?? null,
       },
     });
     await audit({
@@ -121,8 +76,7 @@ export async function POST(request: Request) {
       tenantId: actor.tenantId,
       targetType: "RoleTemplate",
       targetId: created.id,
-      module: body.module,
-      after: { name: created.name, permissions: cleaned, organizationId } as object,
+      after: { name: created.name, permissions: cleaned } as object,
       ip: meta.ip,
       userAgent: meta.userAgent,
     });

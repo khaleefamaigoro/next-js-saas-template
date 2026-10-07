@@ -80,9 +80,6 @@ export function LeftInfoSection({ logoUrl, tenantName }: { logoUrl?: string | nu
           {tenantName && tenantName !== COMPANY_NAME && (
             <p className="text-sm text-muted-foreground">{tenantName}</p>
           )}
-          <p className="mt-2 max-w-xs text-center text-sm text-muted-foreground leading-relaxed">
-            Fleet, station, transport, and tank operations in one place.
-          </p>
         </a>
 
         {/* Stars */}
@@ -141,9 +138,6 @@ export function AuthLayoutWrapper({
                   <CompanyLogo href={null} variant="icon" imgClassName="size-14" />
                 )}
                 <h1 className="mt-3 text-xl font-bold text-foreground tracking-tight">{COMPANY_NAME}</h1>
-                <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-                  Fleet, station, transport, and tank operations in one place.
-                </p>
               </div>
               {children}
               <div className="lg:hidden mt-10 text-muted-foreground">

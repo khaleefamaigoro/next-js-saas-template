@@ -24,7 +24,7 @@ export function UserDetailsPanel({
   bannedReason: string | null;
   permissions: string[];
   allPermissions: readonly string[];
-  roles: { id: string; name: string; permissions: string[]; module: string }[];
+  roles: { id: string; name: string; permissions: string[] }[];
   moduleContext?: "STATION" | "FLEET";
 }) {
   const [isEditMode, setIsEditMode] = useState(false);

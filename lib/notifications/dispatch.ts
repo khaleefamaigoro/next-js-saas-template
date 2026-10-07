@@ -5,7 +5,6 @@ import { emailBrandFromTenant } from "@/lib/email/branding";
 import { sendPushNotification } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 import type {
-  AppModule,
   NotificationAudienceType,
   NotificationChannel,
   NotificationMessage,
@@ -22,9 +21,9 @@ export type AudienceUser = {
   expoPushTokens: string[];
 };
 
-export async function getChannelSettings(tenantId: string, module: AppModule) {
+export async function getChannelSettings(tenantId: string) {
   const rows = await prisma.notificationChannelSetting.findMany({
-    where: { tenantId, module },
+    where: { tenantId },
   });
   const byChannel = new Map(rows.map((row) => [row.channel, row.enabled]));
   return ALL_CHANNELS.map((channel) => ({
@@ -35,22 +34,19 @@ export async function getChannelSettings(tenantId: string, module: AppModule) {
 
 export async function upsertChannelSettings(
   tenantId: string,
-  module: AppModule,
   updates: { channel: NotificationChannel; enabled: boolean }[]
 ) {
   await prisma.$transaction(
     updates.map((update) =>
       prisma.notificationChannelSetting.upsert({
         where: {
-          tenantId_module_channel: {
+          tenantId_channel: {
             tenantId,
-            module,
             channel: update.channel,
           },
         },
         create: {
           tenantId,
-          module,
           channel: update.channel,
           enabled: update.enabled,
         },
@@ -58,19 +54,17 @@ export async function upsertChannelSettings(
       })
     )
   );
-  return getChannelSettings(tenantId, module);
+  return getChannelSettings(tenantId);
 }
 
 export async function resolveAudience(input: {
   tenantId: string;
-  module: AppModule;
   audienceType: NotificationAudienceType;
   audienceIds: string[];
 }): Promise<AudienceUser[]> {
   const base = {
     tenantId: input.tenantId,
     status: "ACTIVE" as const,
-    activeModules: { has: input.module },
   };
 
   const select = {
@@ -99,10 +93,9 @@ export async function resolveAudience(input: {
 
 export async function dispatchNotificationMessage(message: NotificationMessage) {
   const [settings, recipients, tenant] = await Promise.all([
-    getChannelSettings(message.tenantId, message.module),
+    getChannelSettings(message.tenantId),
     resolveAudience({
       tenantId: message.tenantId,
-      module: message.module,
       audienceType: message.audienceType,
       audienceIds: message.audienceIds,
     }),
@@ -173,7 +166,6 @@ export async function dispatchNotificationMessage(message: NotificationMessage) 
       await sendPushNotification(uniqueTokens, message.title, message.body, {
         type: "inbox",
         messageId: message.id,
-        module: message.module,
       });
     } catch (err) {
       logger.error({ err, messageId: message.id }, "notification_push_failed");

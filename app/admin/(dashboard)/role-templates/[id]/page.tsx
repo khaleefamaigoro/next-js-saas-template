@@ -14,10 +14,10 @@ export default async function TenantRoleDetailPage({
 }) {
   const { id } = await params;
   const { edit } = await searchParams;
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_ROLES_READ.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_ROLES_READ.key);
   const canEdit = hasPermission(actor, PERMISSIONS.TENANT_ROLES_WRITE.key);
   const role = await prisma.roleTemplate.findUnique({ where: { id } });
-  if (!role || role.scope !== "TENANT" || role.tenantId !== actor.tenantId || role.module !== "FLEET" || role.organizationId) {
+  if (!role || role.scope !== "TENANT" || role.tenantId !== actor.tenantId || role.organizationId) {
     notFound();
   }
   const readOnly = !canEdit || edit !== "1";

@@ -30,7 +30,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     if (target.id === actor.userId) {
       throw new DomainError(409, "self_forbidden", "You cannot ban your own account.");
     }
-    requireUserWriteAccess(actor, target);
+    requireUserWriteAccess(actor);
     if (target.status === "SUSPENDED") {
       throw new DomainError(409, "already_banned", "This user is already banned.");
     }

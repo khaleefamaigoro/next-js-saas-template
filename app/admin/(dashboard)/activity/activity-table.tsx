@@ -237,7 +237,6 @@ export function FleetActivityTable({
       ...(date ? { date: format(date, "yyyy-MM-dd") } : {}),
       ...(userId ? { userId } : {}),
       ...(status ? { status } : {}),
-      module: "FLEET",
     }),
     [debouncedAction, date, userId, status]
   );

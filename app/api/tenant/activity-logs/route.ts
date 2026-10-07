@@ -21,7 +21,6 @@ export async function GET(request: Request) {
     const to = url.searchParams.get("to");
     const userId = url.searchParams.get("userId");
     const name = url.searchParams.get("name");
-    const moduleFilter = url.searchParams.get("module") as "STATION" | "FLEET" | "CORE" | null;
     const statusFilter = url.searchParams.get("status") as "SUCCESS" | "FAILED" | null;
     const useOffset = url.searchParams.has("page");
 
@@ -49,10 +48,6 @@ export async function GET(request: Request) {
     const andConditions: Record<string, unknown>[] = [
       { tenantId: actor.tenantId },
     ];
-
-    if (moduleFilter) {
-      andConditions.push({ module: moduleFilter });
-    }
 
     if (action && action.trim()) {
       andConditions.push({ action: { contains: action.trim(), mode: "insensitive" } });
@@ -106,7 +101,6 @@ export async function GET(request: Request) {
 
     const moduleOverviewWhere: Record<string, unknown> = {
       tenantId: actor.tenantId,
-      ...(moduleFilter ? { module: moduleFilter } : {}),
     };
 
     let rows: any[] = [];

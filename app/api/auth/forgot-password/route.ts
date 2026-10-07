@@ -181,6 +181,31 @@ export async function POST(request: Request) {
     }
 
     if (surface === "tenant_client") {
+      const user = await prisma.client.findUnique({
+        where: { tenantId_email: { tenantId: tenant.id, email: body.email.toLowerCase() } },
+      });
+      if (user && user.status === "ACTIVE") {
+        await queuePasswordReset({
+          userType: "CLIENT",
+          userId: user.id,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          email: user.email,
+          name: displayName(user),
+          resetPath: "/auth/reset-password",
+          brand: emailBrandFromTenant(tenant),
+        });
+        await audit({
+          actorType: "SYSTEM",
+          actorId: null,
+          action: "auth.forgot_password",
+          tenantId: tenant.id,
+          targetType: "Client",
+          targetId: user.id,
+          ip: meta.ip,
+          userAgent: meta.userAgent,
+        });
+      }
       return ok({ sent: true });
     }
 

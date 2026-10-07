@@ -258,9 +258,8 @@ export function ActivityTable({
       ...(userId ? { userId } : {}),
       ...(tenantId ? { tenantId } : {}),
       ...(status ? { status } : {}),
-      ...(moduleContext ? { module: moduleContext } : {}),
     }),
-    [debouncedAction, date, userId, tenantId, status, moduleContext]
+    [debouncedAction, date, userId, tenantId, status]
   );
 
   const { data, meta, isLoading, setPage, setPageSize, refresh } =

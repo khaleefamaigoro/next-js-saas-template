@@ -172,7 +172,39 @@ export async function POST(request: Request) {
     }
 
     if (row.userType === "CLIENT") {
-      throw new DomainError(400, "not_supported", "Client portal is not enabled.");
+      if (ctx.mode !== "tenant" || !tenant || tenant.slug !== ctx.slug) {
+        throw new DomainError(400, "wrong_host", "Open this link on the correct workspace URL.");
+      }
+      const user = await prisma.client.findUnique({ where: { id: row.userId } });
+      if (!user || user.status !== "ACTIVE" || user.tenantId !== tenant.id) {
+        throw new DomainError(400, "invalid_token", "This link is no longer valid.");
+      }
+      const reuse = await assertNotReused("CLIENT", user.id, password);
+      if (!reuse.ok) throw new DomainError(400, "password_reused", "Cannot reuse a recent password.");
+      const passwordHash = await hashPassword(password);
+      await prisma.$transaction([
+        prisma.client.update({
+          where: { id: user.id },
+          data: { passwordHash, mustChangePassword: false, failedLoginAttempts: 0, lockedUntil: null },
+        }),
+        prisma.passwordResetToken.update({
+          where: { id: row.id },
+          data: { consumedAt: new Date() },
+        }),
+      ]);
+      await recordPassword("CLIENT", user.id, passwordHash);
+      await revokeAllSessionsForUser("CLIENT", user.id);
+      await audit({
+        actorType: "SYSTEM",
+        actorId: null,
+        action: "auth.reset_password",
+        tenantId: tenant.id,
+        targetType: "Client",
+        targetId: user.id,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      });
+      return ok({ redirect: "/auth/login" });
     }
 
     throw new DomainError(400, "invalid_token", "This link is invalid.");

@@ -22,7 +22,6 @@ export async function GET(request: Request) {
     const to = url.searchParams.get("to");
     const userId = url.searchParams.get("userId");
     const statusFilter = url.searchParams.get("status") as "SUCCESS" | "FAILED" | null;
-    const moduleFilter = url.searchParams.get("module") as "STATION" | "FLEET" | null;
     const useOffset = url.searchParams.has("page");
 
     const andConditions: Record<string, unknown>[] = [];
@@ -31,10 +30,6 @@ export async function GET(request: Request) {
       andConditions.push({ tenantId: null });
     } else if (tenantId) {
       andConditions.push({ tenantId });
-    }
-
-    if (moduleFilter) {
-      andConditions.push({ module: moduleFilter });
     }
 
     if (statusFilter === "FAILED") {
@@ -82,9 +77,6 @@ export async function GET(request: Request) {
       baseWhere.tenantId = null;
     } else if (tenantId) {
       baseWhere.tenantId = tenantId;
-    }
-    if (moduleFilter) {
-      baseWhere.module = moduleFilter;
     }
 
     const startOfToday = new Date();

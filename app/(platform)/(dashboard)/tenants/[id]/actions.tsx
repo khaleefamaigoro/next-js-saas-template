@@ -48,32 +48,6 @@ export function TenantActions({ tenantId, status }: { tenantId: string; status: 
   );
 }
 
-// ── Module toggle (existing) ────────────────────────────────────────────────
-
-export function TenantModuleToggle({ tenantId, module, enabled }: { tenantId: string; module: string; enabled: boolean }) {
-  const [pending, setPending] = useState(false);
-  const [on, setOn] = useState(enabled);
-
-  async function toggle(next: boolean) {
-    setPending(true);
-    const previous = on;
-    setOn(next);
-    const res = await apiPatch(`/api/platform/tenants/${tenantId}`, { action: "toggle_module", module, enabled: next });
-    setPending(false);
-    if (res.error) { setOn(previous); alert(res.error.message); return; }
-    window.location.reload();
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      <Badge variant="outline" className={cn("font-medium", on ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "text-muted-foreground")}>
-        {on ? "Enabled" : "Disabled"}
-      </Badge>
-      <Switch checked={on} disabled={pending} onCheckedChange={toggle} aria-label={on ? `Disable ${module}` : `Enable ${module}`} />
-    </div>
-  );
-}
-
 // ── Trial controls ──────────────────────────────────────────────────────────
 
 export function TrialControls({

@@ -10,7 +10,7 @@ import { buildOffsetPageMeta } from "@/lib/api/pagination";
 import { failedActivityWhere } from "@/lib/activity/status";
 import { PageHeader } from "@/components/shell";
 import { Card, CardAction, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { TenantActions, TenantModuleToggle, TrialControls, PlatformControls, TenantNotesEditor, RevokeSubscriptionButton } from "./actions";
+import { TenantActions, TrialControls, PlatformControls, TenantNotesEditor, RevokeSubscriptionButton } from "./actions";
 import { TenantActivityTab } from "./activity-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -28,21 +28,17 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
   Building2,
-  Fuel,
   Globe,
   Landmark,
   Mail,
   MapPin,
   Phone,
-  Truck,
   Users,
   UserRound,
-  Plus,
   SlidersHorizontal,
   FileText,
   CalendarClock,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 function initials(name: string) {
   return (
@@ -59,17 +55,6 @@ function personName(user: { firstName: string | null; lastName: string | null; e
   return `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
 }
 
-function isModuleOn(
-  module: "STATION" | "FLEET",
-  activeModules: string[],
-  records: { module: string; status: string }[],
-) {
-  const record = records.find((m) => m.module === module);
-  if (record) return record.status === "ACTIVE";
-  if (activeModules.length === 0) return true;
-  return activeModules.includes(module);
-}
-
 export default async function TenantDrilldownPage({
   params,
 }: {
@@ -81,7 +66,6 @@ export default async function TenantDrilldownPage({
     where: { id },
     include: {
       _count: { select: { users: true } },
-      modules: { select: { module: true, status: true } },
       subscriptions: { orderBy: { recordedAt: "desc" } },
     },
   });
@@ -130,8 +114,6 @@ export default async function TenantDrilldownPage({
 
   const owner = users.find((u) => u.isOwner) ?? null;
   const logoUrl = resolveLogoUrl(parseTenantSettings(tenant.settingsJson).logoKey);
-  const stationOn = isModuleOn("STATION", tenant.activeModules, tenant.modules);
-  const fleetOn = isModuleOn("FLEET", tenant.activeModules, tenant.modules);
   const address = [tenant.addressLine1, tenant.addressLine2, tenant.city, tenant.region, tenant.postalCode, tenant.country]
     .filter(Boolean)
     .join(", ");
@@ -293,27 +275,6 @@ export default async function TenantDrilldownPage({
 
         <TabsContent value="controls" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2">
-            
-            {/* ── Modules ── */}
-            <div className="flex flex-col gap-4">
-              <ModuleCard
-                icon={Fuel}
-                title="Station Management"
-                description="Fuel stations, tanks, pumps, shifts, and retail operations."
-                tenantId={tenant.id}
-                module="STATION"
-                enabled={stationOn}
-              />
-              <ModuleCard
-                icon={Truck}
-                title="Fleet Management"
-                description="Trucks, orders, deliveries, and transport operations."
-                tenantId={tenant.id}
-                module="FLEET"
-                enabled={fleetOn}
-              />
-            </div>
-            
             {/* ── Internal Notes ── */}
             <Card className="flex flex-col">
               <CardHeader className="border-b border-border/40 pb-3 shrink-0">
@@ -372,24 +333,22 @@ export default async function TenantDrilldownPage({
         <TabsContent value="payments" className="mt-4">
           <Card>
             <CardHeader className="border-b border-border/40 pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileText className="size-4 text-primary" />
-                  <CardTitle className="text-sm font-semibold">Subscription History</CardTitle>
-                </div>
-                <Button size="sm" asChild>
-                  <Link href={`/subscriptions/new?tenantId=${tenant.id}`}>
-                    <Plus className="size-3.5" />
-                    Record Payment
-                  </Link>
-                </Button>
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-primary" />
+                <CardTitle className="text-sm font-semibold">Billing history</CardTitle>
               </div>
-              <CardDescription className="text-xs">Manually recorded B2B deals for this tenant.</CardDescription>
+              <CardDescription className="text-xs">
+                Subscription coverage for this tenant. Platform earnings live on{" "}
+                <Link href="/revenue" className="underline">
+                  Revenue
+                </Link>
+                .
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {tenant.subscriptions.length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
-                  No payments recorded yet.
+                  No subscription history yet.
                 </div>
               ) : (
                 <Table>
@@ -479,37 +438,3 @@ function MetaField({
   );
 }
 
-function ModuleCard({
-  icon: Icon,
-  title,
-  description,
-  tenantId,
-  module,
-  enabled,
-}: {
-  icon: typeof Fuel;
-  title: string;
-  description: string;
-  tenantId: string;
-  module: "STATION" | "FLEET";
-  enabled: boolean;
-}) {
-  return (
-    <Card>
-      <CardContent>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex gap-3 min-w-0">
-            <div className="p-2.5 rounded-lg bg-primary/10 ring-1 ring-primary/20 h-fit">
-              <Icon className="size-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{title}</p>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{description}</p>
-            </div>
-          </div>
-          <TenantModuleToggle tenantId={tenantId} module={module} enabled={enabled} />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

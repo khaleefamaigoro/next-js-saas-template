@@ -21,7 +21,6 @@ export async function GET() {
             id: true,
             title: true,
             body: true,
-            module: true,
             createdAt: true,
             sentAt: true,
           },

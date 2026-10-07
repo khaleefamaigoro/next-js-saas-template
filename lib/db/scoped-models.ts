@@ -12,6 +12,8 @@
 
 export const STRICT_SCOPED: ReadonlySet<string> = new Set([
   "TenantUser",
+  "Client",
+  "PendingClientRegistration",
   "Template",
   "NotificationChannelSetting",
   "NotificationMessage",

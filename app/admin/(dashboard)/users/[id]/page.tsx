@@ -13,13 +13,13 @@ export default async function TenantUserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_READ.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_USERS_READ.key);
   const user = await prisma.tenantUser.findUnique({ where: { id } });
   if (!user || user.tenantId !== actor.tenantId) notFound();
   const roles = await prisma.roleTemplate.findMany({
-    where: { scope: "TENANT", tenantId: actor.tenantId, module: "FLEET", organizationId: null },
+    where: { scope: "TENANT", tenantId: actor.tenantId, organizationId: null },
     orderBy: [{ isSystem: "desc" }, { name: "asc" }],
-    select: { id: true, name: true, permissions: true, module: true },
+    select: { id: true, name: true, permissions: true },
   });
   const displayName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
 

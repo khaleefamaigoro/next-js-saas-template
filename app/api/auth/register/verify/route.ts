@@ -61,7 +61,6 @@ export async function POST(request: Request) {
         data: {
           slug: body.slug,
           name: body.name,
-          activeModules: ["FLEET", "STATION"],
           companyEmail: body.companyEmail ?? null,
           companyPhone: body.companyPhone ?? null,
           website: body.website ?? null,
@@ -84,7 +83,6 @@ export async function POST(request: Request) {
             name: r.name,
             permissions: [...r.permissions],
             isSystem: true,
-            module: r.module as any,
           },
         });
       }

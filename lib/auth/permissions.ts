@@ -18,6 +18,8 @@ export const PERMISSIONS = {
   TENANT_NOTIFICATIONS_WRITE: { key: "tenant.notifications:write", module: "tenant.notifications", description: "Compose and send notifications" },
   TENANT_TEMPLATES_READ: { key: "tenant.templates:read", module: "tenant.templates", description: "View templates" },
   TENANT_TEMPLATES_WRITE: { key: "tenant.templates:write", module: "tenant.templates", description: "Modify templates" },
+  TENANT_CLIENTS_READ: { key: "tenant.clients:read", module: "tenant.clients", description: "View tenant clients" },
+  TENANT_CLIENTS_WRITE: { key: "tenant.clients:write", module: "tenant.clients", description: "Invite / modify tenant clients" },
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]["key"];
@@ -56,8 +58,8 @@ export const ALL_TENANT_PERMISSION_KEYS: PermissionKey[] = ALL_FLEET_PERMISSION_
 export const ALL_STATION_PERMISSION_KEYS: PermissionKey[] = [];
 
 export const TENANT_BUILTIN_ROLES = [
-  { name: "Owner", permissions: ALL_TENANT_PERMISSION_KEYS, isSystem: true, module: "FLEET" as const },
-  { name: "Admin", permissions: ALL_TENANT_PERMISSION_KEYS.filter((k) => !k.endsWith("settings:write")) as PermissionKey[], isSystem: true, module: "FLEET" as const },
+  { name: "Owner", permissions: ALL_TENANT_PERMISSION_KEYS, isSystem: true },
+  { name: "Admin", permissions: ALL_TENANT_PERMISSION_KEYS.filter((k) => !k.endsWith("settings:write")) as PermissionKey[], isSystem: true },
 ] as const;
 
 export type PlatformActor = {
@@ -73,7 +75,6 @@ export type TenantActor = {
   tenantId: string;
   isOwner: boolean;
   organizationId: string | null;
-  activeModules: Array<"STATION" | "FLEET" | "CORE">;
   permissions: ReadonlySet<string>;
 };
 

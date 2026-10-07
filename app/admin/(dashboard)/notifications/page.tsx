@@ -7,12 +7,12 @@ import { NotificationsManager } from "@/components/notifications/notifications-m
 export const metadata = { title: "Notifications" };
 
 export default async function FleetNotificationsPage() {
-  const actor = await requireTenantPage(PERMISSIONS.TENANT_NOTIFICATIONS_READ.key, "FLEET");
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_NOTIFICATIONS_READ.key);
 
   const [settings, messages, users, organizations] = await Promise.all([
-    getChannelSettings(actor.tenantId, "FLEET"),
+    getChannelSettings(actor.tenantId),
     prisma.notificationMessage.findMany({
-      where: { tenantId: actor.tenantId, module: "FLEET" },
+      where: { tenantId: actor.tenantId },
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
@@ -21,7 +21,7 @@ export default async function FleetNotificationsPage() {
       },
     }),
     prisma.tenantUser.findMany({
-      where: { tenantId: actor.tenantId, status: "ACTIVE", activeModules: { has: "FLEET" } },
+      where: { tenantId: actor.tenantId, status: "ACTIVE" },
       select: { id: true, firstName: true, lastName: true, email: true },
       orderBy: { firstName: "asc" },
     }),
@@ -30,7 +30,6 @@ export default async function FleetNotificationsPage() {
 
   return (
     <NotificationsManager
-      module="FLEET"
       settings={settings}
       messages={JSON.parse(JSON.stringify(messages))}
       users={users}

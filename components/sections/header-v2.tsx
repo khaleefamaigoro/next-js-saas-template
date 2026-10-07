@@ -25,7 +25,6 @@ type InboxItem = {
   message: {
     title: string
     body: string
-    module: "STATION" | "FLEET"
   }
 }
 

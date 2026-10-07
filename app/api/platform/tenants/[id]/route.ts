@@ -7,16 +7,10 @@ import { ok } from "@/lib/api/respond";
 import { handleError, DomainError } from "@/lib/api/errors";
 import { requireCsrf } from "@/lib/api/csrf-guard";
 import { parseTenantSettings } from "@/lib/tenant/settings";
-import type { AppModule } from "@/lib/generated/prisma/client";
 
 const Body = z.discriminatedUnion("action", [
   // Existing lifecycle actions
   z.object({ action: z.enum(["suspend", "archive", "restore"]) }),
-  z.object({
-    action: z.literal("toggle_module"),
-    module: z.enum(["STATION", "FLEET"]),
-    enabled: z.boolean(),
-  }),
 
   // Trial controls
   z.object({
@@ -62,32 +56,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
     let updated = tenant;
 
-    // ── toggle_module ──────────────────────────────────────────────────────
-    if (action === "toggle_module") {
-      const module = payload.module as AppModule;
-      const activeModules = new Set(tenant.activeModules);
-      if (payload.enabled) activeModules.add(module);
-      else activeModules.delete(module);
-
-      updated = await prisma.$transaction(async (tx) => {
-        const next = await tx.tenant.update({
-          where: { id },
-          data: { activeModules: Array.from(activeModules) },
-        });
-        await tx.tenantModule.upsert({
-          where: { tenantId_module: { tenantId: id, module } },
-          create: {
-            tenantId: id,
-            module,
-            status: payload.enabled ? "ACTIVE" : "SUSPENDED",
-          },
-          update: { status: payload.enabled ? "ACTIVE" : "SUSPENDED" },
-        });
-        return next;
-      });
-
-    // ── set_trial ──────────────────────────────────────────────────────────
-    } else if (action === "set_trial") {
+    if (action === "set_trial") {
       const startedAt = payload.trialStartedAt
         ? new Date(payload.trialStartedAt)
         : (tenant.trialStartedAt ?? new Date());
@@ -155,8 +124,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       tenantId: id,
       targetType: "Tenant",
       targetId: id,
-      before: action === "toggle_module" ? { activeModules: tenant.activeModules } : { status: tenant.status },
-      after:  action === "toggle_module" ? { activeModules: updated.activeModules } : { status: updated.status },
+      before: { status: tenant.status },
+      after: { status: updated.status },
       ip: meta.ip,
       userAgent: meta.userAgent,
     });

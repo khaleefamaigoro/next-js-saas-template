@@ -1,0 +1,58 @@
+import { z } from "zod";
+
+/**
+ * Typed schema for `Tenant.settingsJson`. Stored in the existing
+ * JSON column. Reads never throw: unknown/legacy shapes fall
+ * back to defaults and unknown keys are stripped.
+ */
+
+export const MODULE_KEYS = [
+  "users",
+  "roles",
+  "templates",
+  "activity",
+] as const;
+
+export type ModuleKey = (typeof MODULE_KEYS)[number];
+
+export const DEFAULT_PRIMARY_COLOR = "#0f172a";
+
+export const tenantSettingsSchema = z.object({
+  logoKey: z.string().min(1).max(300).optional(),
+  backgroundKey: z.string().min(1).max(300).optional(),
+  signatureKey: z.string().min(1).max(300).optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex color like #1e293b")
+    .default(DEFAULT_PRIMARY_COLOR),
+  timezone: z.string().min(1).max(64).default("UTC"),
+  locale: z.string().min(2).max(10).default("en"),
+  currency: z.string().length(3).default("USD"),
+  enabledModules: z.array(z.enum(MODULE_KEYS)).default([...MODULE_KEYS]),
+
+  // ── Platform-controlled capacity limits ──────────────────────────────────
+  /** Max number of users allowed for this tenant (enforced during trial) */
+  maxUsers: z.number().int().min(1).default(50),
+
+  // ── Platform-controlled feature gates ────────────────────────────────────
+  /** Allow tenant to generate API keys */
+  allowApiAccess: z.boolean().default(false),
+  /** Lock tenant out with a maintenance message (platform override) */
+  maintenanceMode: z.boolean().default(false),
+  /** Custom message shown when maintenanceMode is true */
+  maintenanceMessage: z
+    .string()
+    .max(500)
+    .default("This workspace is temporarily unavailable. Please contact support."),
+});
+
+export type TenantSettings = z.infer<typeof tenantSettingsSchema>;
+
+/** Parse stored settings, applying defaults and never throwing. */
+export function parseTenantSettings(json: unknown): TenantSettings {
+  const result = tenantSettingsSchema.safeParse(
+    json && typeof json === "object" ? json : {},
+  );
+  if (result.success) return result.data;
+  return tenantSettingsSchema.parse({});
+}

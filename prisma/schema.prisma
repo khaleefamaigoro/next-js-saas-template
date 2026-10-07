@@ -1,0 +1,436 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AppModule {
+  CORE
+  STATION
+  FLEET
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum RoleScope {
+  PLATFORM
+  TENANT
+}
+
+enum ActorType {
+  PLATFORM_USER
+  TENANT_USER
+  CLIENT
+  SYSTEM
+}
+
+enum SessionUserType {
+  PLATFORM
+  TENANT
+  CLIENT
+}
+
+enum SessionScope {
+  FULL
+  MUST_CHANGE_PASSWORD
+}
+
+enum OtpPurpose {
+  CLIENT_LOGIN
+  CLIENT_SIGNUP
+  TENANT_REGISTRATION
+  TENANT_OWNER_CHANGE_EMAIL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum DemoRequestStatus {
+  PENDING
+  CONTACTED
+  NEGOTIATING
+  CONVERTED
+  LOST
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  MESSAGE
+  IN_APP
+}
+
+enum NotificationAudienceType {
+  ALL_MODULE_USERS
+  STATION
+  ORGANIZATION
+  USERS
+}
+
+enum NotificationMessageStatus {
+  DRAFT
+  SENT
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model TenantModule {
+  id        String    @id @default(uuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module    AppModule
+  status    String    @default("ACTIVE")
+  enabledAt DateTime  @default(now())
+  expiresAt DateTime?
+  settings  Json?
+
+  @@unique([tenantId, module])
+  @@index([tenantId])
+  @@map("tenant_modules")
+}
+
+model Tenant {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  status       TenantStatus @default(ACTIVE)
+  ownerUserId  String?
+  companyEmail String?
+  companyPhone String?
+  website      String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  region       String?
+  postalCode   String?
+  country      String?
+  settingsJson Json         @default("{}")
+  createdAt    DateTime     @default(now())
+  archivedAt   DateTime?
+
+  trialDays       Int       @default(14)
+  trialStartedAt  DateTime?
+  trialEndsAt     DateTime?
+  trialExtensions Int       @default(0)
+
+  notes String?
+
+  users                      TenantUser[]
+  roleTemplates              RoleTemplate[]
+  templates                  Template[]
+  activityLogs               ActivityLog[]
+  activeModules              String[]                     @default(["CORE", "FLEET"])
+  modules                    TenantModule[]
+  subscriptions              TenantSubscription[]
+  notificationSettings       NotificationChannelSetting[]
+  notificationMessages       NotificationMessage[]
+  notificationDeliveries     NotificationDelivery[]
+
+  @@index([status])
+  @@index([trialEndsAt])
+}
+
+model TenantSubscription {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  amount      Decimal @db.Decimal(12, 2)
+  currency    String  @default("NGN")
+  description String?
+  receiptRef  String?
+
+  startDate DateTime
+  endDate   DateTime
+
+  status SubscriptionStatus @default(ACTIVE)
+
+  recordedById  String
+  recordedAt    DateTime  @default(now())
+  revokedById   String?
+  revokedAt     DateTime?
+  revokedReason String?
+
+  @@index([tenantId, status])
+  @@index([endDate])
+  @@map("tenant_subscriptions")
+}
+
+model DemoRequest {
+  id     String            @id @default(cuid())
+  status DemoRequestStatus @default(PENDING)
+
+  companyName  String
+  contactName  String
+  email        String
+  phone        String?
+  companySize  String?
+  industry     String?
+  country      String?
+  interestedIn String[] @default([])
+  message      String?
+
+  assignedTo          String?
+  reviewNotes         String?
+  scheduledAt         DateTime?
+  convertedToTenantId String?
+  reviewedAt          DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@map("demo_requests")
+}
+
+model PlatformUser {
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  passwordHash        String
+  mustChangePassword  Boolean    @default(true)
+  status              UserStatus @default(ACTIVE)
+  firstName           String?
+  lastName            String?
+  otherName           String?
+  phone               String?
+  isSuperAdmin        Boolean    @default(false)
+  permissions         String[]   @default([])
+  createdAt           DateTime   @default(now())
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+}
+
+model TenantUser {
+  id                  String     @id @default(cuid())
+  tenantId            String
+  tenant              Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email               String
+  passwordHash        String
+  mustChangePassword  Boolean    @default(true)
+  status              UserStatus @default(ACTIVE)
+  bannedReason        String?
+  firstName           String?
+  lastName            String?
+  otherName           String?
+  phone               String?
+  isOwner             Boolean    @default(false)
+  organizationId      String?
+  activeModules       AppModule[] @default([CORE, FLEET])
+  stationPermissions  String[]    @default([])
+  fleetPermissions    String[]    @default([])
+  createdAt           DateTime    @default(now())
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int         @default(0)
+  lockedUntil         DateTime?
+  expoPushTokens      String[]    @default([])
+  createdNotifications NotificationMessage[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model PasswordResetToken {
+  id         String          @id @default(cuid())
+  tokenHash  String          @unique
+  userType   SessionUserType
+  userId     String
+  tenantId   String?
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime        @default(now())
+
+  @@index([expiresAt])
+}
+
+model RoleTemplate {
+  id             String    @id @default(cuid())
+  scope          RoleScope
+  tenantId       String?
+  tenant         Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  organizationId String?
+  name           String
+  description    String?
+  module         AppModule @default(CORE)
+  permissions    String[]
+  isSystem       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  @@index([scope, tenantId, module])
+  @@index([organizationId])
+}
+
+model Permission {
+  key         String @id
+  module      String
+  description String
+}
+
+model ActivityLog {
+  id         String    @id @default(cuid())
+  tenantId   String?
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  actorType  ActorType
+  actorId    String?
+  module     AppModule @default(CORE)
+  action     String
+  targetType String?
+  targetId   String?
+  beforeJson Json?
+  afterJson  Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([actorId])
+  @@index([action])
+}
+
+model OtpRequest {
+  id         String     @id @default(cuid())
+  identifier String
+  codeHash   String
+  purpose    OtpPurpose
+  tenantId   String?
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int        @default(0)
+  createdAt  DateTime   @default(now())
+
+  @@index([identifier, createdAt])
+  @@index([tenantId])
+}
+
+model Session {
+  id        String          @id
+  userType  SessionUserType
+  userId    String
+  tenantId  String?
+  scope     SessionScope    @default(FULL)
+  issuedAt  DateTime        @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type        String
+  name        String
+  contentJson Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, type])
+}
+
+model PasswordHistory {
+  id        String          @id @default(cuid())
+  userType  SessionUserType
+  userId    String
+  hash      String
+  createdAt DateTime        @default(now())
+
+  @@index([userType, userId, createdAt])
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  scope      String
+  success    Boolean
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, scope, createdAt])
+}
+
+model ReservedSlug {
+  slug      String   @id
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model NotificationChannelSetting {
+  id        String              @id @default(uuid())
+  tenantId  String
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module    AppModule
+  channel   NotificationChannel
+  enabled   Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([tenantId, module, channel])
+  @@index([tenantId])
+  @@map("notification_channel_settings")
+}
+
+model NotificationMessage {
+  id                String                    @id @default(uuid())
+  tenantId          String
+  tenant            Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module            AppModule
+  title             String
+  body              String                    @db.Text
+  channels          NotificationChannel[]
+  audienceType      NotificationAudienceType
+  audienceIds       String[]
+  audienceActorType ActorType                 @default(TENANT_USER)
+  status            NotificationMessageStatus @default(DRAFT)
+  createdById       String
+  createdBy         TenantUser                @relation(fields: [createdById], references: [id])
+  sentAt            DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  deliveries        NotificationDelivery[]
+
+  @@index([tenantId, module, createdAt])
+  @@index([createdById])
+  @@map("notification_messages")
+}
+
+model NotificationDelivery {
+  id        String                     @id @default(uuid())
+  tenantId  String
+  tenant    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messageId String
+  message   NotificationMessage        @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  actorType ActorType                  @default(TENANT_USER)
+  channel   NotificationChannel
+  status    NotificationDeliveryStatus @default(PENDING)
+  readAt    DateTime?
+  error     String?
+  createdAt DateTime                   @default(now())
+
+  @@index([tenantId, userId, createdAt])
+  @@index([messageId])
+  @@index([userId, channel, readAt])
+  @@map("notification_deliveries")
+}

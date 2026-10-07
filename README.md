@@ -1,4 +1,4 @@
-# hr-pal
+# Next js Saas Template
 
 Multi-tenant Next.js starter extracted from OpsTrack: auth, tenant isolation, platform SaaS, and Paystack as payment infrastructure. Domain features (fleet, stations, client fuel) are not included.
 

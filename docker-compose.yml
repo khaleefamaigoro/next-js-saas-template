@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  hr-pal:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr-pal
+    environment:
+      - NODE_ENV=production
+      # Pass your actual env vars here or use env_file
+      # - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hr-pal.rule=Host(`${DOMAIN}`) || HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.${DOMAIN}`)"
+      - "traefik.http.routers.hr-pal.entrypoints=websecure" # Use web for HTTP or websecure for HTTPS
+      - "traefik.http.routers.hr-pal.tls.certresolver=letsencrypt" # Assuming Dokploy uses letsencrypt certresolver
+      - "traefik.http.services.hr-pal.loadbalancer.server.port=3000"
+    restart: unless-stopped
+
+networks:
+  dokploy-network:
+    external: true

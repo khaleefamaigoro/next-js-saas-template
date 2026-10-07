@@ -1,0 +1,167 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+export function getOrdinalSuffix(day: number): string {
+  if (day > 3 && day < 21) return "th";
+  switch (day % 10) {
+    case 1:  return "st";
+    case 2:  return "nd";
+    case 3:  return "rd";
+    default: return "th";
+  }
+}
+
+export function formatHumanReadableDate(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return "—";
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (isNaN(date.getTime())) return "—";
+
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+  return `${month} ${day}${getOrdinalSuffix(day)} ${year} ${hours}:${minutesStr}${ampm}`;
+}
+
+export function formatHumanReadableDateOnly(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return "—";
+  let isoStr = "";
+  if (typeof dateInput === "string") {
+    isoStr = dateInput;
+  } else if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
+    isoStr = dateInput.toISOString();
+  } else {
+    return "—";
+  }
+
+  const parts = isoStr.slice(0, 10).split("-");
+  if (parts.length < 3) return "—";
+  const year = Number(parts[0]);
+  const monthIndex = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+
+  if (isNaN(year) || isNaN(monthIndex) || isNaN(day) || monthIndex < 0 || monthIndex > 11) {
+    return "—";
+  }
+
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  return `${months[monthIndex]} ${day}${getOrdinalSuffix(day)} ${year}`;
+}
+
+export function formatTimeOnly(dateInput: string | Date | null | undefined): string | null {
+  if (!dateInput) return null;
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (isNaN(date.getTime())) return null;
+  if (date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0) {
+    return null;
+  }
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+  return `${hours}:${minutesStr}${ampm}`;
+}
+
+export function formatShortCurrency(num: number): string {
+  if (num === null || num === undefined) return "₦0";
+  return `₦${Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(num)}`;
+}
+
+export function formatNumberInput(value: string | number): string {
+  if (value === "" || value === null || value === undefined) return "";
+  const numStr = value.toString().replace(/[^0-9.]/g, "");
+  const parts = numStr.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (parts.length > 2) {
+    return `${parts[0]}.${parts.slice(1).join("")}`;
+  }
+  return parts.join(".");
+}
+
+export function parseFormattedNumber(value: string): string {
+  if (!value) return "";
+  const cleaned = value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+  const parts = cleaned.split(".");
+  if (parts.length > 2) {
+    return `${parts[0]}.${parts.slice(1).join("")}`;
+  }
+  return cleaned;
+}
+
+export function formatDestination(dest?: string | null): string {
+  if (!dest) return "Destination";
+  const cleaned = dest.replace(/\s*\(\s*primary\s+destination\s*\)/gi, "").trim();
+  if (!cleaned) return dest;
+  return cleaned
+    .split(/\s+/)
+    .map((w) => (w.length > 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+export function formatTruckLabel(transport?: {
+  isOneTime?: boolean | null;
+  oneTimeTruckPlate?: string | null;
+  oneTimeTransporterName?: string | null;
+  truck?: { name?: string | null; plateNumber?: string | null; truckNumber?: string | null } | null;
+  transporter?: { name?: string | null } | null;
+} | null): string {
+  if (!transport) return "Unassigned Truck";
+
+  const isInvalid = (val?: string | null) => {
+    if (!val) return true;
+    const v = val.trim().toLowerCase();
+    return (
+      !v ||
+      v === "unknown" ||
+      v === "n/a" ||
+      v === "null" ||
+      v === "—" ||
+      v === "-" ||
+      v === "unassigned" ||
+      v === "unassigned truck"
+    );
+  };
+
+  const oneTimePlate = transport.oneTimeTruckPlate?.trim();
+  const plate = transport.truck?.plateNumber?.trim();
+  const name = transport.truck?.name?.trim();
+  const truckNum = transport.truck?.truckNumber?.trim();
+
+  const primary = transport.isOneTime
+    ? (!isInvalid(oneTimePlate) ? oneTimePlate : (!isInvalid(plate) ? plate : (!isInvalid(name) ? name : (!isInvalid(truckNum) ? truckNum : null))))
+    : (!isInvalid(plate) ? plate : (!isInvalid(name) ? name : (!isInvalid(truckNum) ? truckNum : (!isInvalid(oneTimePlate) ? oneTimePlate : null))));
+
+  if (primary) {
+    return primary;
+  }
+
+  const transporter = transport.transporter?.name?.trim() || transport.oneTimeTransporterName?.trim();
+  if (transporter && !isInvalid(transporter)) {
+    return `Truck (${transporter})`;
+  }
+
+  return "Unassigned Truck";
+}

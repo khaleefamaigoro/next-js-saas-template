@@ -1,0 +1,39 @@
+import { prisma } from "@/lib/db/client";
+import { requireTenantPage } from "@/lib/auth/page-guards";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { getChannelSettings } from "@/lib/notifications/dispatch";
+import { NotificationsManager } from "@/components/notifications/notifications-manager";
+
+export const metadata = { title: "Notifications" };
+
+export default async function FleetNotificationsPage() {
+  const actor = await requireTenantPage(PERMISSIONS.TENANT_NOTIFICATIONS_READ.key);
+
+  const [settings, messages, users, organizations] = await Promise.all([
+    getChannelSettings(actor.tenantId),
+    prisma.notificationMessage.findMany({
+      where: { tenantId: actor.tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        createdBy: { select: { firstName: true, lastName: true, email: true } },
+        _count: { select: { deliveries: true } },
+      },
+    }),
+    prisma.tenantUser.findMany({
+      where: { tenantId: actor.tenantId, status: "ACTIVE" },
+      select: { id: true, firstName: true, lastName: true, email: true },
+      orderBy: { firstName: "asc" },
+    }),
+    Promise.resolve([] as { id: string; name: string }[]),
+  ]);
+
+  return (
+    <NotificationsManager
+      settings={settings}
+      messages={JSON.parse(JSON.stringify(messages))}
+      users={users}
+      organizations={organizations}
+    />
+  );
+}

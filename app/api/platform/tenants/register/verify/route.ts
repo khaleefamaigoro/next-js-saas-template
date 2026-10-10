@@ -15,7 +15,10 @@ import { runWithContext } from "@/lib/db/tenant-context";
 import { requirePlatformActor, PERMISSIONS } from "@/lib/auth/guards";
 import { requestMeta } from "@/lib/auth/audit";
 import { PlatformRegisterBody } from "../start/route";
+<<<<<<< HEAD
 import { getPlatformSettings, tenantCreatePlanFields } from "@/lib/platform/settings";
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 const QUARANTINE_DAYS = 90;
 
@@ -59,7 +62,16 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashPassword(body.password);
+<<<<<<< HEAD
     const planFields = tenantCreatePlanFields(await getPlatformSettings());
+=======
+
+    const trialStartedAt = body.enableTrial ? new Date() : null;
+    const trialEndsAt = body.enableTrial
+      ? new Date(Date.now() + body.trialDays * 24 * 60 * 60 * 1000)
+      : null;
+    const trialDays = body.enableTrial ? body.trialDays : 0;
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
     const created = await prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
@@ -76,7 +88,13 @@ export async function POST(request: Request) {
           region: body.region || null,
           postalCode: body.postalCode || null,
           country: body.country || null,
+<<<<<<< HEAD
           ...planFields,
+=======
+          trialDays,
+          trialStartedAt,
+          trialEndsAt,
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
         },
       });
 

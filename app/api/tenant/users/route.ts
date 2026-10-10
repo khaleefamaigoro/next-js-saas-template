@@ -20,7 +20,10 @@ import {
   requireAnyPermission,
 } from "@/lib/auth/membership";
 import { resolveUserRole } from "@/lib/auth/role-resolver";
+<<<<<<< HEAD
 import { assertSeatAvailable } from "@/lib/platform/entitlements";
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 const InviteBody = z.object({
   email: z.email(),
@@ -148,8 +151,11 @@ export async function POST(request: Request) {
       return ok({ user, attached: true });
     }
 
+<<<<<<< HEAD
     await assertSeatAvailable(actor.tenantId);
 
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     const tempPassword = generateTempPassword();
     const passwordHash = await hashPassword(tempPassword);
     const user = await prisma.tenantUser.create({

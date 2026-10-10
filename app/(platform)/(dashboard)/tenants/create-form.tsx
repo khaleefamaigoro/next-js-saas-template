@@ -75,6 +75,11 @@ const CompanySchema = z.object({
   postalCode: z.string().max(40).optional().or(z.literal("")),
   country: z.string().max(2).optional().or(z.literal("")),
   status: z.enum(["ACTIVE", "SUSPENDED"]),
+<<<<<<< HEAD
+=======
+  enableTrial: z.boolean(),
+  trialDays: z.number().int().min(0).max(365),
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 });
 
 type AccountValues = z.infer<typeof AccountSchema>;
@@ -634,12 +639,21 @@ function CompanyForm({
       postalCode: "",
       country: "",
       status: "ACTIVE",
+<<<<<<< HEAD
+=======
+      enableTrial: true,
+      trialDays: 14,
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     },
   });
 
   const slug = watch("slug");
   const country = watch("country");
   const status = watch("status");
+<<<<<<< HEAD
+=======
+  const enableTrial = watch("enableTrial");
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
   const [slugStatus, setSlugStatus] = useState<string | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
@@ -894,6 +908,7 @@ function CompanyForm({
               </div>
             </FormField>
 
+<<<<<<< HEAD
             <p className="text-xs text-muted-foreground">
               New tenants receive the global trial from{" "}
               <Link href="/settings" className="underline">
@@ -901,6 +916,42 @@ function CompanyForm({
               </Link>
               .
             </p>
+=======
+            {/* Trial Lifecycle */}
+            <FormField label="Free trial lifecycle" htmlFor="enableTrial">
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center gap-3 py-1">
+                  <Checkbox
+                    id="enableTrial"
+                    checked={enableTrial}
+                    onCheckedChange={(checked) => setValue("enableTrial", !!checked)}
+                  />
+                  <label
+                    htmlFor="enableTrial"
+                    className="text-xs font-medium text-foreground cursor-pointer select-none"
+                  >
+                    Enable free trial period
+                  </label>
+                </div>
+
+                {enableTrial ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="trialDays"
+                      type="number"
+                      min={1}
+                      max={365}
+                      className="w-24 h-8 text-xs dark:bg-background"
+                      {...register("trialDays", { valueAsNumber: true })}
+                    />
+                    <span className="text-xs text-muted-foreground">Days trial duration</span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No trial period (requires manual activation / sub)</span>
+                )}
+              </div>
+            </FormField>
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
           </div>
 
         </div>

@@ -44,6 +44,7 @@ export function TenantActions({ tenantId, status }: { tenantId: string; status: 
           {pending === "restore" ? "…" : "Restore"}
         </Button>
       ) : null}
+<<<<<<< HEAD
       <Button
         variant="outline"
         size="sm"
@@ -58,6 +59,8 @@ export function TenantActions({ tenantId, status }: { tenantId: string; status: 
       >
         {pending === "impersonate" ? "…" : "Impersonate"}
       </Button>
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     </div>
   );
 }
@@ -75,12 +78,27 @@ export function TrialControls({
   trialStartedAt: string | null;
   trialEndsAt: string | null;
 }) {
+<<<<<<< HEAD
+=======
+  const [days, setDays] = useState(trialDays);
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   const [pending, setPending] = useState<string | null>(null);
 
   const endsAt = trialEndsAt ? new Date(trialEndsAt) : null;
   const now = new Date();
   const daysLeft = endsAt ? Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
 
+<<<<<<< HEAD
+=======
+  async function saveTrial() {
+    setPending("save");
+    const res = await apiPatch(`/api/platform/tenants/${tenantId}`, { action: "set_trial", trialDays: days });
+    setPending(null);
+    if (res.error) { alert(res.error.message); return; }
+    window.location.reload();
+  }
+
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   async function extend(extDays: number) {
     setPending(`extend_${extDays}`);
     const res = await apiPatch(`/api/platform/tenants/${tenantId}`, { action: "extend_trial", days: extDays });
@@ -111,11 +129,33 @@ export function TrialControls({
         </p>
       )}
 
+<<<<<<< HEAD
       <p className="text-xs text-muted-foreground">
         Global trial length: <span className="font-medium text-foreground">{trialDays} days</span>
         {" "}
         <a href="/settings" className="underline">Change in settings</a>
       </p>
+=======
+      <div className="flex items-end gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="trial-days" className="text-xs">Trial duration (days)</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="trial-days"
+              type="number"
+              min={1}
+              max={365}
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="w-20 h-8 text-sm"
+            />
+            <Button size="sm" variant="outline" disabled={pending !== null} onClick={saveTrial}>
+              {pending === "save" ? "Saving…" : "Set"}
+            </Button>
+          </div>
+        </div>
+      </div>
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
       <div className="flex flex-wrap gap-2">
         <span className="text-xs text-muted-foreground self-center">Extend by:</span>
@@ -129,6 +169,7 @@ export function TrialControls({
   );
 }
 
+<<<<<<< HEAD
 export function PlanSelect({
   tenantId,
   currentKey,
@@ -169,6 +210,8 @@ export function PlanSelect({
   );
 }
 
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 // ── Platform controls (capacity limits + feature gates) ─────────────────────
 
 export function PlatformControls({
@@ -181,7 +224,10 @@ export function PlatformControls({
     allowApiAccess: boolean;
     maintenanceMode: boolean;
     maintenanceMessage: string;
+<<<<<<< HEAD
     featureFlags: Record<string, boolean>;
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   };
 }) {
   const [values, setValues] = useState(settings);
@@ -255,6 +301,7 @@ export function PlatformControls({
         ))}
       </div>
 
+<<<<<<< HEAD
       <div className="space-y-1.5">
         <Label className="text-xs">Feature flags (JSON object of booleans)</Label>
         <Textarea
@@ -271,6 +318,8 @@ export function PlatformControls({
           }}
         />
       </div>
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
       {saved && <p className="text-xs text-emerald-600">Saved ✓</p>}
     </div>
   );

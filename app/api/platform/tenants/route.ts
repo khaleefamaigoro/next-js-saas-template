@@ -14,7 +14,10 @@ import { ok } from "@/lib/api/respond";
 import { handleError, DomainError } from "@/lib/api/errors";
 import { requireCsrf } from "@/lib/api/csrf-guard";
 import { parsePagination, buildPageMeta } from "@/lib/api/pagination";
+<<<<<<< HEAD
 import { getPlatformSettings, tenantCreatePlanFields } from "@/lib/platform/settings";
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 const QUARANTINE_DAYS = 90;
 
@@ -89,7 +92,10 @@ export async function POST(request: Request) {
 
     const tempPassword = generateTempPassword();
     const passwordHash = await hashPassword(tempPassword);
+<<<<<<< HEAD
     const planFields = tenantCreatePlanFields(await getPlatformSettings());
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
     const created = await prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
@@ -105,7 +111,13 @@ export async function POST(request: Request) {
           region: body.region ?? null,
           postalCode: body.postalCode ?? null,
           country: body.country ?? null,
+<<<<<<< HEAD
           ...planFields,
+=======
+          // Start trial immediately on provisioning
+          trialStartedAt: new Date(),
+          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
         },
       });
       // Owner/roles/log belong to the new tenant — bind scope to it so the

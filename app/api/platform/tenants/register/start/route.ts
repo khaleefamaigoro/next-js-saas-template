@@ -33,6 +33,11 @@ export const PlatformRegisterBody = z.object({
 
   // Platform admin configuration
   status: z.enum(["ACTIVE", "SUSPENDED"]).default("ACTIVE"),
+<<<<<<< HEAD
+=======
+  enableTrial: z.boolean().default(true),
+  trialDays: z.coerce.number().int().min(0).max(365).default(14),
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   mustChangePassword: z.boolean().default(false),
 });
 

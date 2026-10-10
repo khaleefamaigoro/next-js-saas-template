@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db/client";
 import { requireTenantPage } from "@/lib/auth/page-guards";
 import { PageHeader } from "@/components/shell";
 import { TenantProfileView } from "@/components/profile/tenant-profile-view";
+<<<<<<< HEAD
 import { SessionsPanel } from "@/components/sessions-panel";
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 export default async function FleetProfilePage() {
   const actor = await requireTenantPage();
@@ -51,7 +54,10 @@ export default async function FleetProfilePage() {
     <div className="space-y-6">
       <PageHeader title="My Profile" backHref="/admin" />
       <TenantProfileView initialUser={initialUser} />
+<<<<<<< HEAD
       <SessionsPanel />
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     </div>
   );
 }

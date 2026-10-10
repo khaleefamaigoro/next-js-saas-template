@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+<<<<<<< HEAD
 import { claimDurableKey } from "@/lib/platform/durable-key";
 import { applyPaidPlan } from "@/lib/platform/paystack";
 
@@ -16,6 +17,13 @@ type PaystackEvent = {
   };
 };
 
+=======
+
+/**
+ * Generic Paystack webhook. Verifies HMAC SHA512 and acknowledges events.
+ * Wire tenant subscription checkout here when you add billed plans.
+ */
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 export async function POST(request: Request) {
   try {
     const rawBody = await request.text();
@@ -31,6 +39,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
     }
 
+<<<<<<< HEAD
     const payload = JSON.parse(rawBody) as PaystackEvent;
     const eventId = payload.data?.id != null ? String(payload.data.id) : payload.data?.reference;
     if (eventId) {
@@ -59,6 +68,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   } catch (err) {
     logger.error({ err }, "paystack_webhook_failed");
+=======
+    const payload = JSON.parse(rawBody) as { event?: string };
+    logger.info({ event: payload.event }, "paystack webhook received");
+    return NextResponse.json({ received: true });
+  } catch {
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     return NextResponse.json({ message: "Invalid payload" }, { status: 400 });
   }
 }

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # hr-pal
+=======
+# Next js Saas Template
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 Multi-tenant Next.js starter extracted from OpsTrack: auth, tenant isolation, platform SaaS, and Paystack as payment infrastructure. Domain features (fleet, stations, client fuel) are not included.
 
@@ -24,7 +28,11 @@ npm run dev
 - Platform admin: `http://$APP_DOMAIN/auth/login`
 - Tenant admin: `http://{slug}.$APP_DOMAIN/admin/auth/login` (or the path your `proxy.ts` maps)
 
+<<<<<<< HEAD
 Optional: `PAYSTACK_SECRET_KEY` for checkout and `/api/webhooks/paystack`. Paid plans apply when `charge.success` includes `metadata.tenantId` and `metadata.planKey`. Use `npm run db:migrate` for versioned Prisma migrations in new environments; `db:push` remains for local additive sync.
+=======
+Optional: `PAYSTACK_SECRET_KEY` for webhook signature verification at `/api/webhooks/paystack`. Tenant subscriptions are still recorded manually by platform admins.
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 ## Conventions
 

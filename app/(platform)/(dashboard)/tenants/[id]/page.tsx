@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/client";
 import { requirePlatformPage } from "@/lib/auth/page-guards";
 import { PERMISSIONS } from "@/lib/auth/permissions";
+<<<<<<< HEAD
 import { getPlatformSettings } from "@/lib/platform/settings";
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 import { parseTenantSettings } from "@/lib/tenant/settings";
 import { resolveLogoUrl } from "@/lib/email/branding";
 import { resolveActivityLogRows } from "@/lib/activity/resolver";
@@ -11,7 +14,11 @@ import { buildOffsetPageMeta } from "@/lib/api/pagination";
 import { failedActivityWhere } from "@/lib/activity/status";
 import { PageHeader } from "@/components/shell";
 import { Card, CardAction, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+<<<<<<< HEAD
 import { TenantActions, TrialControls, PlatformControls, TenantNotesEditor, RevokeSubscriptionButton, PlanSelect } from "./actions";
+=======
+import { TenantActions, TrialControls, PlatformControls, TenantNotesEditor, RevokeSubscriptionButton } from "./actions";
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 import { TenantActivityTab } from "./activity-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -71,7 +78,10 @@ export default async function TenantDrilldownPage({
     },
   });
   if (!tenant) notFound();
+<<<<<<< HEAD
   const platformSettings = await getPlatformSettings();
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
   const users = await prisma.tenantUser.findMany({
     where: { tenantId: id },
@@ -288,11 +298,16 @@ export default async function TenantDrilldownPage({
               </CardContent>
             </Card>
 
+<<<<<<< HEAD
             {/* ── Plan / Trial Panel ── */}
+=======
+            {/* ── Trial Panel ── */}
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
             <Card>
               <CardHeader className="border-b border-border/40 pb-3">
                 <div className="flex items-center gap-2">
                   <CalendarClock className="size-4 text-primary" />
+<<<<<<< HEAD
                   <CardTitle className="text-sm font-semibold">Plan &amp; trial</CardTitle>
                 </div>
                 <CardDescription className="text-xs">
@@ -308,6 +323,16 @@ export default async function TenantDrilldownPage({
                 <TrialControls
                   tenantId={tenant.id}
                   trialDays={platformSettings.trialDays}
+=======
+                  <CardTitle className="text-sm font-semibold">Trial</CardTitle>
+                </div>
+                <CardDescription className="text-xs">Configure the trial window for this tenant.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <TrialControls
+                  tenantId={tenant.id}
+                  trialDays={tenant.trialDays}
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
                   trialStartedAt={tenant.trialStartedAt?.toISOString() ?? null}
                   trialEndsAt={tenant.trialEndsAt?.toISOString() ?? null}
                 />
@@ -331,7 +356,10 @@ export default async function TenantDrilldownPage({
                     allowApiAccess: parseTenantSettings(tenant.settingsJson).allowApiAccess,
                     maintenanceMode: parseTenantSettings(tenant.settingsJson).maintenanceMode,
                     maintenanceMessage: parseTenantSettings(tenant.settingsJson).maintenanceMessage,
+<<<<<<< HEAD
                     featureFlags: parseTenantSettings(tenant.settingsJson).featureFlags,
+=======
+>>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
                   }}
                 />
               </CardContent>

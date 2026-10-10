@@ -2,7 +2,8 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { Search } from "lucide-react";
 import {
   Command,
   CommandDialog,
@@ -41,11 +42,13 @@ interface AppSidebarProps {
   stations?: { id: string; name: string; code: string; organization?: { name: string | null; slug: string | null; logoUrl: string | null; type: string | null } }[];
   tenant?: { name: string; slug: string; logoUrl: string | null };
   internalOrganizations?: { id: string; name: string; slug: string | null; logoUrl: string | null }[];
+  onSearchClick?: () => void;
 }
 
-export function AppSidebar({ items, title, logoUrl, roleLabel, userLabel, context, enabledModules, stations = [], tenant, internalOrganizations: explicitInternalOrgs }: AppSidebarProps) {
+export function AppSidebar({ items, title, logoUrl, roleLabel, userLabel, context, enabledModules, stations = [], tenant, internalOrganizations: explicitInternalOrgs, onSearchClick }: AppSidebarProps) {
   const { isMobile } = useSidebar();
   const [openCommand, setOpenCommand] = useState(false);
+  const [modKey, setModKey] = useState("Ctrl");
   const pathname = usePathname();
   const isFleet =
     !!pathname?.startsWith("/admin") &&
@@ -56,6 +59,12 @@ export function AppSidebar({ items, title, logoUrl, roleLabel, userLabel, contex
   const showStationSwitch = context !== "platform" && (!enabledModules || enabledModules.includes("operations") || enabledModules.includes("stations") || enabledModules.includes("station"));
   const showFleetSwitch = context !== "platform" && (!enabledModules || enabledModules.includes("fleet"));
   const showDropdown = context !== "platform" && (showStationSwitch && showFleetSwitch);
+
+  useEffect(() => {
+    if (/Mac|iPhone|iPod|iPad/.test(navigator.platform)) {
+      setModKey("⌘");
+    }
+  }, []);
   
   const internalOrganizations = useMemo(() => {
     if (explicitInternalOrgs && explicitInternalOrgs.length > 0) {
@@ -203,6 +212,20 @@ export function AppSidebar({ items, title, logoUrl, roleLabel, userLabel, contex
               )}
             </SidebarMenuItem>
           </SidebarMenu>
+          {onSearchClick && (
+            <button
+              type="button"
+              onClick={onSearchClick}
+              aria-label="Search pages"
+              className="mx-2 flex h-9 items-center gap-2 rounded-full border border-sidebar-border bg-sidebar-accent/60 px-3 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <Search className="size-4 shrink-0" />
+              <span className="flex-1 truncate text-left">Search pages...</span>
+              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-sidebar-border bg-sidebar px-1.5 font-mono text-[10px] font-medium text-sidebar-foreground/70 sm:inline-flex">
+                {modKey}K
+              </kbd>
+            </button>
+          )}
         </SidebarHeader>
 
         {/* ---------------- Content ---------------- */}

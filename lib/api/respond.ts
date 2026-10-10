@@ -11,7 +11,12 @@ export function ok<T>(data: T, meta?: Record<string, unknown>, status = 200) {
   return NextResponse.json(body, { status });
 }
 
-export function fail(status: number, code: string, message: string) {
-  const body: Envelope<null> = { data: null, error: { code, message } };
-  return NextResponse.json(body, { status });
+export function fail(status: number, code: string, message: string, requestId?: string) {
+  const body: Envelope<null> = {
+    data: null,
+    error: { code, message },
+    ...(requestId ? { meta: { requestId } } : {}),
+  };
+  const headers = requestId ? { "x-request-id": requestId } : undefined;
+  return NextResponse.json(body, { status, headers });
 }

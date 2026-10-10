@@ -44,6 +44,20 @@ export function TenantActions({ tenantId, status }: { tenantId: string; status: 
           {pending === "restore" ? "…" : "Restore"}
         </Button>
       ) : null}
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={pending !== null}
+        onClick={async () => {
+          setPending("impersonate");
+          const res = await apiPost<{ url: string }>(`/api/platform/tenants/${tenantId}/impersonate`, {});
+          setPending(null);
+          if (res.error) { alert(res.error.message); return; }
+          if (res.data?.url) window.open(res.data.url, "_blank");
+        }}
+      >
+        {pending === "impersonate" ? "…" : "Impersonate"}
+      </Button>
     </div>
   );
 }
@@ -61,20 +75,11 @@ export function TrialControls({
   trialStartedAt: string | null;
   trialEndsAt: string | null;
 }) {
-  const [days, setDays] = useState(trialDays);
   const [pending, setPending] = useState<string | null>(null);
 
   const endsAt = trialEndsAt ? new Date(trialEndsAt) : null;
   const now = new Date();
   const daysLeft = endsAt ? Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
-
-  async function saveTrial() {
-    setPending("save");
-    const res = await apiPatch(`/api/platform/tenants/${tenantId}`, { action: "set_trial", trialDays: days });
-    setPending(null);
-    if (res.error) { alert(res.error.message); return; }
-    window.location.reload();
-  }
 
   async function extend(extDays: number) {
     setPending(`extend_${extDays}`);
@@ -106,25 +111,11 @@ export function TrialControls({
         </p>
       )}
 
-      <div className="flex items-end gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="trial-days" className="text-xs">Trial duration (days)</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="trial-days"
-              type="number"
-              min={1}
-              max={365}
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-              className="w-20 h-8 text-sm"
-            />
-            <Button size="sm" variant="outline" disabled={pending !== null} onClick={saveTrial}>
-              {pending === "save" ? "Saving…" : "Set"}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Global trial length: <span className="font-medium text-foreground">{trialDays} days</span>
+        {" "}
+        <a href="/settings" className="underline">Change in settings</a>
+      </p>
 
       <div className="flex flex-wrap gap-2">
         <span className="text-xs text-muted-foreground self-center">Extend by:</span>
@@ -134,6 +125,46 @@ export function TrialControls({
           </Button>
         ))}
       </div>
+    </div>
+  );
+}
+
+export function PlanSelect({
+  tenantId,
+  currentKey,
+  plans,
+}: {
+  tenantId: string;
+  currentKey: string;
+  plans: { key: string; label: string }[];
+}) {
+  const [pending, setPending] = useState(false);
+
+  async function change(planKey: string) {
+    if (planKey === currentKey) return;
+    setPending(true);
+    const res = await apiPatch(`/api/platform/tenants/${tenantId}`, { action: "set_plan", planKey });
+    setPending(false);
+    if (res.error) { alert(res.error.message); return; }
+    window.location.reload();
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="tenant-plan">Plan</Label>
+      <select
+        id="tenant-plan"
+        className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+        value={currentKey}
+        disabled={pending}
+        onChange={(e) => change(e.target.value)}
+      >
+        {plans.map((p) => (
+          <option key={p.key} value={p.key}>
+            {p.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -150,6 +181,7 @@ export function PlatformControls({
     allowApiAccess: boolean;
     maintenanceMode: boolean;
     maintenanceMessage: string;
+    featureFlags: Record<string, boolean>;
   };
 }) {
   const [values, setValues] = useState(settings);
@@ -223,6 +255,22 @@ export function PlatformControls({
         ))}
       </div>
 
+      <div className="space-y-1.5">
+        <Label className="text-xs">Feature flags (JSON object of booleans)</Label>
+        <Textarea
+          rows={3}
+          className="font-mono text-xs"
+          defaultValue={JSON.stringify(settings.featureFlags ?? {}, null, 2)}
+          onBlur={(e) => {
+            try {
+              const parsed = JSON.parse(e.target.value) as Record<string, boolean>;
+              void save({ featureFlags: parsed } as Partial<typeof values>);
+            } catch {
+              alert("Invalid JSON");
+            }
+          }}
+        />
+      </div>
       {saved && <p className="text-xs text-emerald-600">Saved ✓</p>}
     </div>
   );

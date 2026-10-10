@@ -20,6 +20,7 @@ import {
   requireAnyPermission,
 } from "@/lib/auth/membership";
 import { resolveUserRole } from "@/lib/auth/role-resolver";
+import { assertSeatAvailable } from "@/lib/platform/entitlements";
 
 const InviteBody = z.object({
   email: z.email(),
@@ -146,6 +147,8 @@ export async function POST(request: Request) {
       });
       return ok({ user, attached: true });
     }
+
+    await assertSeatAvailable(actor.tenantId);
 
     const tempPassword = generateTempPassword();
     const passwordHash = await hashPassword(tempPassword);

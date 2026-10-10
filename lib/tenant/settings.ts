@@ -44,6 +44,8 @@ export const tenantSettingsSchema = z.object({
     .string()
     .max(500)
     .default("This workspace is temporarily unavailable. Please contact support."),
+
+  featureFlags: z.record(z.string(), z.boolean()).default({}),
 });
 
 export type TenantSettings = z.infer<typeof tenantSettingsSchema>;

@@ -19,7 +19,6 @@ export default async function TenantsPage() {
       companyEmail: true,
       createdAt: true,
       settingsJson: true,
-      trialDays: true,
       trialStartedAt: true,
       trialEndsAt: true,
       users: {

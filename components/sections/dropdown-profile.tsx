@@ -18,6 +18,7 @@ import {
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PlanBadge } from "@/components/plan-badge";
 
 type Props = {
   trigger: ReactElement;
@@ -30,6 +31,7 @@ type Props = {
   };
   onLogout?: () => void;
   profileHref?: string;
+  planBadge?: { key: string; label: string };
 };
 
 type MenuItem = {
@@ -50,7 +52,7 @@ const LOGOUT_ITEM: MenuItem = {
 
 const itemClass = "px-4 py-2.5 text-sm cursor-pointer gap-3";
 
-const ProfileDropdown = ({ trigger, defaultOpen, align = "end", user, onLogout, profileHref }: Props) => {
+const ProfileDropdown = ({ trigger, defaultOpen, align = "end", user, onLogout, profileHref, planBadge }: Props) => {
   const pathname = usePathname();
   const isStation = pathname === "/admin/station" || pathname?.startsWith("/admin/station/");
   const defaultProfileHref = isStation ? "/admin/station/profile" : "/admin/profile";
@@ -84,6 +86,11 @@ const ProfileDropdown = ({ trigger, defaultOpen, align = "end", user, onLogout, 
                 <span className="text-muted-foreground text-xs truncate">
                   {user?.email || "user@example.com"}
                 </span>
+                {planBadge ? (
+                  <div className="mt-1">
+                    <PlanBadge planKey={planBadge.key} label={planBadge.label} />
+                  </div>
+                ) : null}
               </div>
             </Link>
           </DropdownMenuLabel>

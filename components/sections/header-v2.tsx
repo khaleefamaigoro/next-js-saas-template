@@ -1,11 +1,12 @@
 'use client'
 
 import ProfileDropdown from "@/components/sections/dropdown-profile"
+import { PlanBadge } from "@/components/plan-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { apiGet, apiPost } from "@/lib/client/api"
-import { Bell, Check, Info, Moon, Search, Sun } from "lucide-react"
+import { Bell, Check, Info, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
@@ -45,33 +46,25 @@ interface HeaderV2Props {
     email?: string | null;
     image?: string | null;
   };
-  onSearchClick?: () => void;
   onLogout?: () => void;
   stations?: { id: string; name: string; code: string }[];
   activeStationId?: string;
   profileHref?: string;
+  planBadge?: { key: string; label: string };
 }
 
 export default function HeaderV2({
   user,
   onLogout,
-  onSearchClick,
   stations = [],
   activeStationId = "all",
-  profileHref
+  profileHref,
+  planBadge,
 }: HeaderV2Props) {
   const { theme, resolvedTheme, setTheme } = useTheme()
   const [items, setItems] = useState<InboxItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [modKey, setModKey] = useState("Ctrl")
-
   const isDark = theme === "dark" || resolvedTheme === "dark"
-
-  useEffect(() => {
-    if (/Mac|iPhone|iPod|iPad/.test(navigator.platform)) {
-      setModKey("⌘")
-    }
-  }, [])
 
   async function loadInbox() {
     const res = await apiGet<{ items: InboxItem[]; unreadCount: number }>("/api/tenant/notifications/inbox")
@@ -96,20 +89,6 @@ export default function HeaderV2({
       <div className="relative flex h-18 items-center justify-between border-b gap-4 px-4 sm:px-8">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <SidebarTrigger className="cursor-pointer shrink-0"/>
-          {onSearchClick && (
-            <button
-              type="button"
-              onClick={onSearchClick}
-              aria-label="Search pages"
-              className="absolute left-1/2 flex h-9 w-88 -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-muted/40 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground sm:w-86"
-            >
-              <Search className="size-4 shrink-0" />
-              <span className="flex-1 truncate text-left">Search pages...</span>
-              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
-                {modKey}K
-              </kbd>
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -195,11 +174,14 @@ export default function HeaderV2({
             <span className="sr-only">Toggle theme</span>
           </Button>
 
+          {planBadge ? <PlanBadge planKey={planBadge.key} label={planBadge.label} /> : null}
+
           {/* Profile Dropdown */}
           <ProfileDropdown
             user={user}
             onLogout={onLogout}
             profileHref={profileHref}
+            planBadge={planBadge}
             trigger={
               <div
                 id="profile-dropdown-trigger"

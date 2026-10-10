@@ -6,6 +6,8 @@ import { DashboardLayoutShell } from "@/components/dashboard-layout-shell";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { publicUrlForKey, s3Configured } from "@/lib/storage/s3";
 import { UnauthorizedToast } from "@/components/unauthorized-toast";
+import { getPlatformSettings } from "@/lib/platform/settings";
+import { isTrialPlan, planLabel, trialDaysRemaining } from "@/lib/platform/plans";
 
 const ADMIN_NAV = [
   {
@@ -45,6 +47,12 @@ const ADMIN_NAV = [
     permission: PERMISSIONS.TENANT_NOTIFICATIONS_READ.key,
   },
   {
+    href: "/admin/billing",
+    title: "Billing",
+    icon: "IconSettings",
+    permission: PERMISSIONS.TENANT_SETTINGS_READ.key,
+  },
+  {
     href: "/admin/settings",
     title: "Settings",
     icon: "IconSettings",
@@ -74,9 +82,15 @@ export default async function TenantDashboardLayout({ children }: { children: Re
       addressLine2: true,
       city: true,
       region: true,
+      planKey: true,
+      trialEndsAt: true,
     },
   });
   if (!tenant || tenant.status !== "ACTIVE") redirect("/maintenance");
+
+  const platformSettings = await getPlatformSettings();
+  const resolvedPlanLabel = planLabel(platformSettings.plans, tenant.planKey);
+  const daysRemaining = isTrialPlan(tenant.planKey) ? trialDaysRemaining(tenant.trialEndsAt) : null;
 
   const settings = parseTenantSettings(tenant.settingsJson);
 
@@ -124,6 +138,8 @@ export default async function TenantDashboardLayout({ children }: { children: Re
             .join(", ") || null,
       }}
       profileHref="/admin/profile"
+      planBadge={{ key: tenant.planKey, label: resolvedPlanLabel }}
+      trialDaysRemaining={daysRemaining}
     >
       <UnauthorizedToast />
       {children}

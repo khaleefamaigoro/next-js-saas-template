@@ -279,3 +279,45 @@ export function notificationEmail(input: {
     body: html,
   });
 }
+
+export function trialWarningEmail(input: {
+  name?: string | null;
+  tenantName: string;
+  when: string;
+  billingUrl: string;
+}): string {
+  const brand = resolveEmailBrand({ companyName: input.tenantName });
+  const body = `
+    <h1 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#0f172a;">Your trial expires ${escape(input.when)}</h1>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">${greeting(input.name)}</p>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">Upgrade ${escape(input.tenantName)} to Pro to keep access after the trial window.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr><td>${ctaButton(input.billingUrl, "Upgrade now", brand.primaryColor)}</td></tr></table>
+  `;
+  return shell({ title: "Trial ending soon", preview: `Trial expires ${input.when}`, brand, body });
+}
+
+export function trialEndedEmail(input: { name?: string | null; tenantName: string; billingUrl: string }): string {
+  const brand = resolveEmailBrand({ companyName: input.tenantName });
+  const body = `
+    <h1 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#0f172a;">Your trial has ended</h1>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">${greeting(input.name)}</p>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">${escape(input.tenantName)} is paused until you choose a paid plan.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr><td>${ctaButton(input.billingUrl, "Choose a plan", brand.primaryColor)}</td></tr></table>
+  `;
+  return shell({ title: "Trial ended", preview: "Your trial has ended", brand, body });
+}
+
+export function paymentReceivedEmail(input: {
+  name?: string | null;
+  tenantName: string;
+  planLabel: string;
+  reference: string;
+}): string {
+  const brand = resolveEmailBrand({ companyName: input.tenantName });
+  const body = `
+    <h1 style="margin:0 0 16px 0;font-size:22px;line-height:1.3;color:#0f172a;">Payment received</h1>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">${greeting(input.name)}</p>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#334155;">${escape(input.tenantName)} is now on the <strong>${escape(input.planLabel)}</strong> plan. Reference ${escape(input.reference)}.</p>
+  `;
+  return shell({ title: "Payment received", preview: `${input.planLabel} payment confirmed`, brand, body });
+}

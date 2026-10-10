@@ -106,11 +106,13 @@ model Tenant {
   settingsJson Json         @default("{}")
   createdAt    DateTime     @default(now())
   archivedAt   DateTime?
+  deletedAt    DateTime?
 
-  trialDays       Int       @default(14)
   trialStartedAt  DateTime?
   trialEndsAt     DateTime?
+  trialDays       Int       @default(14)
   trialExtensions Int       @default(0)
+  planKey         String    @default("trial")
 
   notes String?
 
@@ -138,6 +140,8 @@ model TenantSubscription {
   currency    String  @default("NGN")
   description String?
   receiptRef  String?
+  providerRef String?
+  planKey     String?
 
   startDate DateTime
   endDate   DateTime
@@ -152,6 +156,7 @@ model TenantSubscription {
 
   @@index([tenantId, status])
   @@index([endDate])
+  @@index([providerRef])
   @@map("tenant_subscriptions")
 }
 
@@ -179,6 +184,14 @@ model DemoRequest {
 
   @@index([status])
   @@map("demo_requests")
+}
+
+model PlatformSettings {
+  id             String   @id @default("default")
+  trialDays      Int      @default(14)
+  defaultPlanKey String   @default("trial")
+  plansJson      Json     @default("[{\"key\":\"trial\",\"label\":\"Trial\"},{\"key\":\"pro\",\"label\":\"Pro\"},{\"key\":\"enterprise\",\"label\":\"Enterprise\"}]")
+  updatedAt      DateTime @updatedAt
 }
 
 model PlatformUser {
@@ -352,11 +365,30 @@ model Session {
   issuedAt  DateTime        @default(now())
   expiresAt DateTime
   revokedAt DateTime?
-  ip        String?
-  userAgent String?
+  ip                   String?
+  userAgent            String?
+  impersonatorUserId   String?
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model DurableKey {
+  id        String   @id
+  createdAt DateTime @default(now())
+}
+
+model ImpersonationGrant {
+  id               String    @id @default(cuid())
+  token            String    @unique
+  tenantId         String
+  targetUserId     String
+  platformUserId   String
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([tenantId])
 }
 
 model Template {

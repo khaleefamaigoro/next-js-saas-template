@@ -24,7 +24,7 @@ npm run dev
 - Platform admin: `http://$APP_DOMAIN/auth/login`
 - Tenant admin: `http://{slug}.$APP_DOMAIN/admin/auth/login` (or the path your `proxy.ts` maps)
 
-Optional: `PAYSTACK_SECRET_KEY` for webhook signature verification at `/api/webhooks/paystack`. Tenant subscriptions are still recorded manually by platform admins.
+Optional: `PAYSTACK_SECRET_KEY` for checkout and `/api/webhooks/paystack`. Paid plans apply when `charge.success` includes `metadata.tenantId` and `metadata.planKey`. Use `npm run db:migrate` for versioned Prisma migrations in new environments; `db:push` remains for local additive sync.
 
 ## Conventions
 

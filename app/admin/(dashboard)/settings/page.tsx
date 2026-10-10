@@ -14,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { POPULAR_CURRENCIES, POPULAR_TIMEZONES, POPULAR_LOCALES } from "@/components/ui/settings-data";
+import { WorkspaceDataTools } from "@/components/workspace-data-tools";
 
 function textOrFallback(value: string | null | undefined) {
   const trimmed = value?.trim();
@@ -273,6 +274,7 @@ export default async function TenantSettingsProfilePage() {
               </div>
             </CardContent>
           </Card>
+          <WorkspaceDataTools isOwner={actor.isOwner} />
         </div>
       </div>
     </div>

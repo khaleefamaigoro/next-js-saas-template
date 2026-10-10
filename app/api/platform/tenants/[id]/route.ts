@@ -7,18 +7,12 @@ import { ok } from "@/lib/api/respond";
 import { handleError, DomainError } from "@/lib/api/errors";
 import { requireCsrf } from "@/lib/api/csrf-guard";
 import { parseTenantSettings } from "@/lib/tenant/settings";
+import { getPlatformSettings } from "@/lib/platform/settings";
 
 const Body = z.discriminatedUnion("action", [
   // Existing lifecycle actions
   z.object({ action: z.enum(["suspend", "archive", "restore"]) }),
 
-  // Trial controls
-  z.object({
-    action: z.literal("set_trial"),
-    trialDays: z.number().int().min(1).max(365),
-    trialStartedAt: z.string().datetime().optional(), // ISO string; defaults to now if not set
-    trialEndsAt: z.string().datetime().optional(),    // override computed end date
-  }),
   z.object({
     action: z.literal("extend_trial"),
     days: z.number().int().min(1).max(365),
@@ -32,6 +26,7 @@ const Body = z.discriminatedUnion("action", [
       allowApiAccess:     z.boolean().optional(),
       maintenanceMode:    z.boolean().optional(),
       maintenanceMessage: z.string().max(500).optional(),
+      featureFlags:       z.record(z.string(), z.boolean()).optional(),
     }),
   }),
 
@@ -39,6 +34,11 @@ const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("set_notes"),
     notes: z.string().max(5000),
+  }),
+
+  z.object({
+    action: z.literal("set_plan"),
+    planKey: z.string().trim().toLowerCase().min(1).max(32),
   }),
 ]);
 
@@ -56,26 +56,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
     let updated = tenant;
 
-    if (action === "set_trial") {
-      const startedAt = payload.trialStartedAt
-        ? new Date(payload.trialStartedAt)
-        : (tenant.trialStartedAt ?? new Date());
-
-      const endsAt = payload.trialEndsAt
-        ? new Date(payload.trialEndsAt)
-        : new Date(startedAt.getTime() + payload.trialDays * 24 * 60 * 60 * 1000);
-
-      updated = await prisma.tenant.update({
-        where: { id },
-        data: {
-          trialDays: payload.trialDays,
-          trialStartedAt: startedAt,
-          trialEndsAt: endsAt,
-        },
-      });
-
-    // ── extend_trial ───────────────────────────────────────────────────────
-    } else if (action === "extend_trial") {
+    if (action === "extend_trial") {
       const base = tenant.trialEndsAt ?? new Date();
       const newEnd = new Date(base.getTime() + payload.days * 24 * 60 * 60 * 1000);
 
@@ -103,14 +84,24 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         data: { notes: payload.notes },
       });
 
+    } else if (action === "set_plan") {
+      const settings = await getPlatformSettings();
+      if (!settings.plans.some((p) => p.key === payload.planKey)) {
+        throw new DomainError(400, "invalid_plan", "Unknown plan.");
+      }
+      updated = await prisma.tenant.update({
+        where: { id },
+        data: { planKey: payload.planKey },
+      });
+
     // ── lifecycle: suspend / archive / restore ─────────────────────────────
     } else {
       const next =
         action === "suspend"
           ? { status: "SUSPENDED" as const, archivedAt: null }
           : action === "archive"
-            ? { status: "ARCHIVED" as const, archivedAt: new Date() }
-            : { status: "ACTIVE" as const, archivedAt: null };
+            ? { status: "ARCHIVED" as const, archivedAt: new Date(), deletedAt: new Date() }
+            : { status: "ACTIVE" as const, archivedAt: null, deletedAt: null };
       updated = await prisma.tenant.update({ where: { id }, data: next });
       if (action === "suspend" || action === "archive") {
         await revokeAllSessionsForTenant(id);

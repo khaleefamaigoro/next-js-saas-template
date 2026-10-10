@@ -9,12 +9,17 @@ const PUBLIC_PLATFORM = [
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
+  "/terms",
+  "/privacy",
+  "/dpa",
+  "/status",
 ];
 const PUBLIC_ADMIN = [
   "/admin/auth/login",
   "/admin/auth/change-password",
   "/admin/auth/forgot-password",
   "/admin/auth/reset-password",
+  "/admin/auth/impersonate",
 ];
 const PUBLIC_CLIENT = [
   "/auth/login",
@@ -28,12 +33,20 @@ function inList(path: string, list: string[]): boolean {
   return list.some((p) => path === p || path.startsWith(`${p}/`));
 }
 
+function withSecurityHeaders(response: NextResponse) {
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host");
   const url = request.nextUrl;
   const path = url.pathname;
 
-  if (path.startsWith("/api/")) return NextResponse.next();
+  if (path.startsWith("/api/")) return withSecurityHeaders(NextResponse.next());
   if (path.startsWith("/_next/") || path === "/favicon.ico" || path.startsWith("/assets/")) {
     return NextResponse.next();
   }
@@ -75,6 +88,9 @@ function handlePlatform(request: NextRequest) {
 function handleTenant(request: NextRequest) {
   const url = request.nextUrl;
   const path = url.pathname;
+  if (["/terms", "/privacy", "/dpa", "/status"].includes(path)) {
+    return NextResponse.next();
+  }
   const isAdmin = path === "/admin" || path.startsWith("/admin/");
 
   if (isAdmin) return handleAdmin(request);

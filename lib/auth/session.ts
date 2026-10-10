@@ -31,6 +31,7 @@ export type CreateSessionInput = {
   scope: SessionScope;
   ip?: string | null;
   userAgent?: string | null;
+  impersonatorUserId?: string | null;
 };
 
 export async function createSession(input: CreateSessionInput): Promise<{ token: string; expiresAt: Date }> {
@@ -46,6 +47,7 @@ export async function createSession(input: CreateSessionInput): Promise<{ token:
       expiresAt,
       ip: input.ip ?? null,
       userAgent: input.userAgent ?? null,
+      impersonatorUserId: input.impersonatorUserId ?? null,
     },
   });
   const jar = await cookies();
@@ -93,6 +95,7 @@ export type LoadedSession = {
   tenantId: string | null;
   scope: SessionScope;
   expiresAt: Date;
+  impersonatorUserId: string | null;
 };
 
 export async function getSession(token: string | null | undefined): Promise<LoadedSession | null> {
@@ -108,6 +111,7 @@ export async function getSession(token: string | null | undefined): Promise<Load
     tenantId: s.tenantId,
     scope: s.scope,
     expiresAt: s.expiresAt,
+    impersonatorUserId: s.impersonatorUserId,
   };
 }
 

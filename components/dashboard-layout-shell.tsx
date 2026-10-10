@@ -18,6 +18,7 @@ import type { NavItem } from "@/components/sections/main-nav";
 import { NavSearchCommand } from "@/components/sections/nav-search-command";
 import { PrintCompanyProvider, type PrintCompanyInfo } from "@/components/print/print-company-context";
 import { apiPost } from "@/lib/client/api";
+import { TrialDaysAlert } from "@/components/trial-days-alert";
 
 interface DashboardLayoutShellProps {
   children: React.ReactNode;
@@ -46,6 +47,8 @@ interface DashboardLayoutShellProps {
   enabledModules?: string[];
   internalOrganizations?: { id: string; name: string; slug: string | null; logoUrl: string | null }[];
   profileHref?: string;
+  planBadge?: { key: string; label: string };
+  trialDaysRemaining?: number | null;
 }
 
 export function DashboardLayoutShell({
@@ -65,6 +68,8 @@ export function DashboardLayoutShell({
   tenant,
   printCompany,
   profileHref,
+  planBadge,
+  trialDaysRemaining,
 }: DashboardLayoutShellProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [logOutModal, setLogOutModal] = useState(false);
@@ -108,19 +113,20 @@ export function DashboardLayoutShell({
           stations={stations}
           tenant={tenant}
           internalOrganizations={internalOrganizations}
+          onSearchClick={() => setSearchOpen(true)}
         />
 
         <SidebarInset className="bg-background overflow-hidden">
           <HeaderV2
             user={{ name: user.name, email: user.email }}
-            onSearchClick={() => setSearchOpen(true)}
             onLogout={() => setLogOutModal(true)}
             stations={stations}
             activeStationId={activeStationId}
             profileHref={profileHref}
+            planBadge={planBadge}
           />
 
-          <main className="flex-1 p-4 md:p-8 bg-white dark:bg-black h-full">
+          <main className="flex-1 p-4 bg-white dark:bg-black h-full">
             <PrintCompanyProvider
               value={
                 printCompany ?? {
@@ -133,6 +139,9 @@ export function DashboardLayoutShell({
                 }
               }
             >
+              {typeof trialDaysRemaining === "number" ? (
+                <TrialDaysAlert daysRemaining={trialDaysRemaining} />
+              ) : null}
               {children}
             </PrintCompanyProvider>
           </main>

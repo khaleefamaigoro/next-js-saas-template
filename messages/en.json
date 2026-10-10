@@ -64,5 +64,13 @@
   "maintenance": {
     "title": "Service unavailable",
     "body": "This workspace is temporarily unavailable. Please contact your administrator."
+  },
+  "overview": {
+    "welcome": "Hi, welcome back {name}",
+    "users": "Workspace users",
+    "checklist": "Get started",
+    "stepLogo": "Add a workspace logo",
+    "stepInvite": "Invite a teammate",
+    "stepClient": "Add a client"
   }
 }

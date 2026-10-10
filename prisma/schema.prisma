@@ -106,7 +106,6 @@ model Tenant {
   settingsJson Json         @default("{}")
   createdAt    DateTime     @default(now())
   archivedAt   DateTime?
-<<<<<<< HEAD
   deletedAt    DateTime?
 
   trialStartedAt  DateTime?
@@ -114,13 +113,6 @@ model Tenant {
   trialDays       Int       @default(14)
   trialExtensions Int       @default(0)
   planKey         String    @default("trial")
-=======
-
-  trialDays       Int       @default(14)
-  trialStartedAt  DateTime?
-  trialEndsAt     DateTime?
-  trialExtensions Int       @default(0)
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
   notes String?
 
@@ -148,11 +140,8 @@ model TenantSubscription {
   currency    String  @default("NGN")
   description String?
   receiptRef  String?
-<<<<<<< HEAD
   providerRef String?
   planKey     String?
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
   startDate DateTime
   endDate   DateTime
@@ -167,10 +156,7 @@ model TenantSubscription {
 
   @@index([tenantId, status])
   @@index([endDate])
-<<<<<<< HEAD
   @@index([providerRef])
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   @@map("tenant_subscriptions")
 }
 
@@ -200,7 +186,6 @@ model DemoRequest {
   @@map("demo_requests")
 }
 
-<<<<<<< HEAD
 model PlatformSettings {
   id             String   @id @default("default")
   trialDays      Int      @default(14)
@@ -209,8 +194,6 @@ model PlatformSettings {
   updatedAt      DateTime @updatedAt
 }
 
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 model PlatformUser {
   id                  String     @id @default(cuid())
   email               String     @unique
@@ -382,20 +365,14 @@ model Session {
   issuedAt  DateTime        @default(now())
   expiresAt DateTime
   revokedAt DateTime?
-<<<<<<< HEAD
   ip                   String?
   userAgent            String?
   impersonatorUserId   String?
-=======
-  ip        String?
-  userAgent String?
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
   @@index([userId])
   @@index([expiresAt])
 }
 
-<<<<<<< HEAD
 model DurableKey {
   id        String   @id
   createdAt DateTime @default(now())
@@ -414,8 +391,6 @@ model ImpersonationGrant {
   @@index([tenantId])
 }
 
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 model Template {
   id          String   @id @default(cuid())
   tenantId    String

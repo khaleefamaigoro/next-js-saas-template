@@ -9,14 +9,11 @@ type PoweredByProps = {
 export function PoweredBy({ className, labelClassName }: PoweredByProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center", className)}>
-<<<<<<< HEAD
       <p className="mb-2 flex gap-3 text-[11px] text-muted-foreground">
         <a href="/terms" className="hover:underline">Terms</a>
         <a href="/privacy" className="hover:underline">Privacy</a>
         <a href="/status" className="hover:underline">Status</a>
       </p>
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
       <p className={cn("text-[15px] font-semibold mb-2 text-center", labelClassName)}>
         ******
       </p>

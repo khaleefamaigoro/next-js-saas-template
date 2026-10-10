@@ -18,10 +18,7 @@ import type { NavItem } from "@/components/sections/main-nav";
 import { NavSearchCommand } from "@/components/sections/nav-search-command";
 import { PrintCompanyProvider, type PrintCompanyInfo } from "@/components/print/print-company-context";
 import { apiPost } from "@/lib/client/api";
-<<<<<<< HEAD
 import { TrialDaysAlert } from "@/components/trial-days-alert";
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 interface DashboardLayoutShellProps {
   children: React.ReactNode;
@@ -50,11 +47,8 @@ interface DashboardLayoutShellProps {
   enabledModules?: string[];
   internalOrganizations?: { id: string; name: string; slug: string | null; logoUrl: string | null }[];
   profileHref?: string;
-<<<<<<< HEAD
   planBadge?: { key: string; label: string };
   trialDaysRemaining?: number | null;
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 }
 
 export function DashboardLayoutShell({
@@ -74,11 +68,8 @@ export function DashboardLayoutShell({
   tenant,
   printCompany,
   profileHref,
-<<<<<<< HEAD
   planBadge,
   trialDaysRemaining,
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 }: DashboardLayoutShellProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [logOutModal, setLogOutModal] = useState(false);
@@ -122,33 +113,20 @@ export function DashboardLayoutShell({
           stations={stations}
           tenant={tenant}
           internalOrganizations={internalOrganizations}
-<<<<<<< HEAD
           onSearchClick={() => setSearchOpen(true)}
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
         />
 
         <SidebarInset className="bg-background overflow-hidden">
           <HeaderV2
             user={{ name: user.name, email: user.email }}
-<<<<<<< HEAD
-=======
-            onSearchClick={() => setSearchOpen(true)}
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
             onLogout={() => setLogOutModal(true)}
             stations={stations}
             activeStationId={activeStationId}
             profileHref={profileHref}
-<<<<<<< HEAD
             planBadge={planBadge}
           />
 
           <main className="flex-1 p-4 bg-white dark:bg-black h-full">
-=======
-          />
-
-          <main className="flex-1 p-4 md:p-8 bg-white dark:bg-black h-full">
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
             <PrintCompanyProvider
               value={
                 printCompany ?? {
@@ -161,12 +139,9 @@ export function DashboardLayoutShell({
                 }
               }
             >
-<<<<<<< HEAD
               {typeof trialDaysRemaining === "number" ? (
                 <TrialDaysAlert daysRemaining={trialDaysRemaining} />
               ) : null}
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
               {children}
             </PrintCompanyProvider>
           </main>

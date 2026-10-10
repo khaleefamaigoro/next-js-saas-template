@@ -14,10 +14,7 @@ import { requireCsrf } from "@/lib/api/csrf-guard";
 import { runWithContext } from "@/lib/db/tenant-context";
 import { enforceRateLimit, RATE_PRESETS } from "@/lib/auth/rate-limit";
 import { RegisterBody } from "../start/route";
-<<<<<<< HEAD
 import { getPlatformSettings, tenantCreatePlanFields } from "@/lib/platform/settings";
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 const QUARANTINE_DAYS = 90;
 
@@ -59,10 +56,7 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashPassword(body.password);
-<<<<<<< HEAD
     const planFields = tenantCreatePlanFields(await getPlatformSettings());
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
     const created = await prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
@@ -78,10 +72,7 @@ export async function POST(request: Request) {
           region: body.region ?? null,
           postalCode: body.postalCode ?? null,
           country: body.country ?? null,
-<<<<<<< HEAD
           ...planFields,
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
         },
       });
       return runWithContext(

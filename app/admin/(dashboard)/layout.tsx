@@ -6,11 +6,8 @@ import { DashboardLayoutShell } from "@/components/dashboard-layout-shell";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { publicUrlForKey, s3Configured } from "@/lib/storage/s3";
 import { UnauthorizedToast } from "@/components/unauthorized-toast";
-<<<<<<< HEAD
 import { getPlatformSettings } from "@/lib/platform/settings";
 import { isTrialPlan, planLabel, trialDaysRemaining } from "@/lib/platform/plans";
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
 
 const ADMIN_NAV = [
   {
@@ -50,15 +47,12 @@ const ADMIN_NAV = [
     permission: PERMISSIONS.TENANT_NOTIFICATIONS_READ.key,
   },
   {
-<<<<<<< HEAD
     href: "/admin/billing",
     title: "Billing",
     icon: "IconSettings",
     permission: PERMISSIONS.TENANT_SETTINGS_READ.key,
   },
   {
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     href: "/admin/settings",
     title: "Settings",
     icon: "IconSettings",
@@ -88,22 +82,16 @@ export default async function TenantDashboardLayout({ children }: { children: Re
       addressLine2: true,
       city: true,
       region: true,
-<<<<<<< HEAD
       planKey: true,
       trialEndsAt: true,
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     },
   });
   if (!tenant || tenant.status !== "ACTIVE") redirect("/maintenance");
 
-<<<<<<< HEAD
   const platformSettings = await getPlatformSettings();
   const resolvedPlanLabel = planLabel(platformSettings.plans, tenant.planKey);
   const daysRemaining = isTrialPlan(tenant.planKey) ? trialDaysRemaining(tenant.trialEndsAt) : null;
 
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
   const settings = parseTenantSettings(tenant.settingsJson);
 
   const logoUrl =
@@ -150,11 +138,8 @@ export default async function TenantDashboardLayout({ children }: { children: Re
             .join(", ") || null,
       }}
       profileHref="/admin/profile"
-<<<<<<< HEAD
       planBadge={{ key: tenant.planKey, label: resolvedPlanLabel }}
       trialDaysRemaining={daysRemaining}
-=======
->>>>>>> 89fe34529615c06917108e3f8d837c9807b2415a
     >
       <UnauthorizedToast />
       {children}
